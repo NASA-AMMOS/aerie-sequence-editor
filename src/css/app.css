@@ -1,0 +1,26 @@
+@import '@nasa-jpl/stellar/font/inter/inter.css';
+@import '@nasa-jpl/stellar/css/variables.css';
+@import '@nasa-jpl/stellar/css/typography.css';
+@import '@nasa-jpl/stellar/css/button.css';
+@import '@nasa-jpl/stellar/css/input.css';
+@import '@nasa-jpl/stellar/css/select.css';
+@import '@nasa-jpl/stellar/css/table.css';
+@import '@nasa-jpl/stellar/css/badge.css';
+@import 'modern-css-reset/dist/reset.min.css';
+@import 'stellar.css';
+@import 'utilities.css';
+
+html,
+body,
+.app {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  background-color: var(--st-primary-background-color);
+  color: var(--st-primary-text-color);
+  font-family: Inter, Roboto;
+  font-size: 12px;
+  font-weight: 300;
+}
