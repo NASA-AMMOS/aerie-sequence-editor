@@ -1,0 +1,45 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  pages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 'lts/*'
+          cache: npm
+      - name: Install Dependencies and Build
+        run: |
+          npm ci
+          cd codemirror-lang-sequence
+          npm ci
+          rm -rf node_modules # We only need the 'dist' folder. App will fail if nested node_modules is included in build.
+          cd ..
+          npm run build
+      - name: Upload Artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: build
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
