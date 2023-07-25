@@ -1,7 +1,7 @@
 import { linter, type Diagnostic } from '@codemirror/lint';
 import type { Extension, Text } from '@codemirror/state';
 import type { CommandDictionary } from '@nasa-jpl/aerie-ampcs';
-// @ts-expect-error library not include type declarations
+// @ts-expect-error library does not include type declarations
 import { parse as jsonSourceMapParse } from 'json-source-map';
 
 type JsonSourceMapPointerPosition = {
