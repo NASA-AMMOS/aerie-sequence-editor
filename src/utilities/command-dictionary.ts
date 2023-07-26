@@ -51,7 +51,7 @@ export function fswCommandArgDefault(fswCommandArg: FswCommandArgument, enumMap:
       return `${default_value}`;
     } else if (range !== null) {
       const { min } = range;
-      return `${min.toFixed(1)}`;
+      return `${min}`;
     } else {
       return '0.0';
     }

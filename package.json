@@ -19,7 +19,7 @@
     "@codemirror/autocomplete": "^6.9.0",
     "@codemirror/lang-json": "^6.0.1",
     "@codemirror/lint": "^6.4.0",
-    "@nasa-jpl/aerie-ampcs": "^1.0.1",
+    "@nasa-jpl/aerie-ampcs": "^1.0.2",
     "@nasa-jpl/seq-json-schema": "^1.0.20",
     "@nasa-jpl/stellar": "^1.1.8",
     "@playwright/test": "^1.36.1",
