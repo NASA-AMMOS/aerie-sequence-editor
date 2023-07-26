@@ -99,7 +99,7 @@ export function sequenceTooltip(commandDictionary: CommandDictionary | null = nu
               above: true,
               create() {
                 const dom = document.createElement('div');
-                new ArgumentTooltip({ props: { arg }, target: dom });
+                new ArgumentTooltip({ props: { arg, commandDictionary }, target: dom });
                 return { dom };
               },
               end: to,

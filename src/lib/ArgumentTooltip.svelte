@@ -1,9 +1,18 @@
 <svelte:options immutable={true} />
 
 <script lang="ts">
-  import type { FswCommandArgument } from '@nasa-jpl/aerie-ampcs';
+  import type { CommandDictionary, FswCommandArgument } from '@nasa-jpl/aerie-ampcs';
+  import { getAllEnumSymbols } from '../utilities/sequence-linter';
 
   export let arg: FswCommandArgument;
+  export let commandDictionary: CommandDictionary;
+
+  let enumSymbolsDisplayStr: string;
+
+  $: if (commandDictionary && arg?.arg_type === 'enum') {
+    const { enumSymbolsDisplayStr: displayStr } = getAllEnumSymbols(commandDictionary.enumMap, arg.enum_name);
+    enumSymbolsDisplayStr = displayStr;
+  }
 </script>
 
 <div class="argument-tooltip">
@@ -13,11 +22,6 @@
     Type: {arg.arg_type}
     <br />
     Description: {arg.description}
-
-    {#if arg.arg_type === 'enum'}
-      <br />
-      Enum Name: {arg.enum_name}
-    {/if}
 
     {#if arg.arg_type === 'boolean' || arg.arg_type === 'enum' || arg.arg_type === 'float' || arg.arg_type === 'integer' || arg.arg_type === 'numeric' || arg.arg_type === 'time' || arg.arg_type === 'unsigned' || arg.arg_type === 'var_string'}
       <br />
@@ -42,6 +46,13 @@
     {#if arg.arg_type === 'repeat' || arg.arg_type === 'var_string'}
       <br />
       Prefix Bit Length: {arg.prefix_bit_length ?? 'None'}
+    {/if}
+
+    {#if arg.arg_type === 'enum'}
+      <br />
+      Enum Name: {arg.enum_name}
+      <br />
+      Enum Symbols: {enumSymbolsDisplayStr}
     {/if}
     <br />
   </div>

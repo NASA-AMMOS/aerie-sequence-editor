@@ -2,7 +2,16 @@ import { syntaxTree } from '@codemirror/language';
 import { linter, type Diagnostic } from '@codemirror/lint';
 import type { Extension } from '@codemirror/state';
 import type { TreeCursor } from '@lezer/common';
-import type { CommandDictionary, FswCommand, HwCommand } from '@nasa-jpl/aerie-ampcs';
+import type { CommandDictionary, EnumMap, FswCommand, HwCommand } from '@nasa-jpl/aerie-ampcs';
+
+/**
+ * Helper that returns all valid enum symbols from a command dictionary enum map, for a given enum name.
+ */
+export function getAllEnumSymbols(enumMap: EnumMap, enumName: string) {
+  const enumSymbols = enumMap[enumName].values.map(({ symbol }) => symbol);
+  const enumSymbolsDisplayStr = enumSymbols.join('  |  ');
+  return { enumSymbols, enumSymbolsDisplayStr };
+}
 
 /**
  * Linter function that returns a Code Mirror extension function.
@@ -76,20 +85,14 @@ export function sequenceLinter(commandDictionary: CommandDictionary | null = nul
               } else if (argNode.name === 'Enum') {
                 if (arg?.arg_type === 'enum') {
                   const enumName = arg.enum_name;
-                  const allowedEnumSymbols = enumMap[enumName].values.map(({ symbol }) => symbol);
-                  const validEnum = allowedEnumSymbols.includes(nodeText);
+                  const { enumSymbols } = getAllEnumSymbols(enumMap, enumName);
+                  const validEnum = enumSymbols.includes(nodeText);
 
                   if (!validEnum) {
-                    const message = [
-                      `Symbol not found in the ${enumName} enumeration.`,
-                      'Please use one of these allowed values:\n',
-                      ...allowedEnumSymbols.map((symbol, i) => `${i + 1}) ${symbol}`),
-                    ].join('\n');
-
                     diagnostics.push({
                       actions: [],
                       from: argNode.from,
-                      message,
+                      message: `Symbol not found in the ${enumName} enumeration.`,
                       severity: 'error',
                       to: argNode.to,
                     });
