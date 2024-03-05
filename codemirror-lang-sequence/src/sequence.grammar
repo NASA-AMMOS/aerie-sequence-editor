@@ -8,7 +8,8 @@ expression[@isGroup=Expression] {
   Local |
   Param |
   Global |
-  Command
+  Command |
+  GroundBlock
 }
 
 Id { @specialize<identifier, "id"> "(" String ")" }
@@ -45,6 +46,10 @@ Global { @specialize<identifier, "global"> "(" VarType "," VarName ")" }
 
 arg { Boolean | Enum | Number | String }
 
+commaSep<elem> {
+  elem ("," elem)*
+}
+
 RepeatArg { "[" commaSep<arg> "]" }
 
 RepeatArgs { "[" commaSep<RepeatArg> "]" }
@@ -55,13 +60,32 @@ Stem { identifier }
 
 Command { timeTag? Stem Args? }
 
+
+GroundBlock {
+  timeTag @specialize<identifier, "groundBlock"> "(" String ("," Args)? ")"
+  (
+    Description? Model*  |
+    Model* Description?
+  )?
+}
+
+Description { @specialize<identifier, "description"> "(" String ")"}
+
+Model {
+  @specialize<identifier, "model"> "(" Variable "," Value "," Offset ")"
+}
+
+Variable { String }
+
+Offset { String }
+
+Value { String | Number | Boolean }
+
 Object { "{" commaSep<Property> "}" }
 
 Property {  String ":" String }
 
 timeTag { TimeTagAbsolute | TimeTagComplete | TimeTagEpoch | TimeTagRelative }
-
-commaSep<content> { content ("," content?)* }
 
 @tokens {
   identifier { @asciiLetter (@asciiLetter| @digit | "_" | "-")* }

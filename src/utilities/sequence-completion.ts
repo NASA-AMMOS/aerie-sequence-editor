@@ -27,6 +27,7 @@ export function sequenceCompletion(commandDictionary: CommandDictionary | null =
       const enumerationCompletions: Completion[] = [];
       const fswCommandsCompletions: Completion[] = [];
       const hwCommandsCompletions: Completion[] = [];
+      const testCompletion: Completion[] = [];
 
       // Time Tags.
       timeTagCompletions.push(
@@ -106,6 +107,14 @@ export function sequenceCompletion(commandDictionary: CommandDictionary | null =
             type: 'function',
           });
         }
+
+        fswCommandsCompletions.push({
+          apply: 'groundBlock("name")',
+          info: 'A ground block',
+          label: 'groundBlock',
+          section: 'Steps',
+          type: 'function',
+        });
       }
 
       return {
@@ -115,6 +124,7 @@ export function sequenceCompletion(commandDictionary: CommandDictionary | null =
           ...enumerationCompletions,
           ...fswCommandsCompletions,
           ...hwCommandsCompletions,
+          ...testCompletion,
         ],
       };
     }

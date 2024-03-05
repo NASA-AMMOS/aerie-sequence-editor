@@ -37,6 +37,8 @@ export function sequenceLinter(commandDictionary: CommandDictionary | null = nul
             to: node.to,
           });
         }
+      } else if (node.name === 'GroundBlock') {
+        console.log(node.name);
       } else if (node.name == 'Stem') {
         if (commandDictionary) {
           const { fswCommandMap, hwCommandMap } = commandDictionary;

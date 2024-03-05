@@ -69,6 +69,10 @@ export function seqJsonLinter(commandDictionary: CommandDictionary | null = null
             }
           }
         }
+      } else {
+        for (const [key, pointer] of Object.entries<JsonSourceMapPointer>(sourceMap.pointers)) {
+          const stemMatch = key.match(/\/groundBlock/);
+        }
       }
     } catch (e) {
       if (!(e instanceof SyntaxError)) throw e;
