@@ -11,6 +11,8 @@ import type {
   StringArgument,
   Time,
   VariableDeclaration,
+  Model,
+  GroundBlock,
 } from '@nasa-jpl/seq-json-schema/types';
 import { logInfo } from './logger';
 
@@ -247,17 +249,85 @@ export function parseTime(commandNode: SyntaxNode, text: string): Time {
 
   if (timeTagEpochNode) {
     const timeTagEpochText = text.slice(timeTagEpochNode.from, timeTagEpochNode.to);
-    const tag = parseTimeTag(timeTagEpochText);
+    const tag = timeTagEpochText.slice(1);
     return { tag, type: 'EPOCH_RELATIVE' };
   }
 
   if (timeTagRelativeNode) {
     const timeTagRelativeText = text.slice(timeTagRelativeNode.from, timeTagRelativeNode.to);
-    const tag = parseTimeTag(timeTagRelativeText);
+    const tag = timeTagRelativeText.length > 0 ? secondsToHMS(Number(timeTagRelativeText.slice(1))) : '00:00:00';
     return { tag, type: 'COMMAND_RELATIVE' };
   }
 
   return { tag: 'UNKNOWN', type: 'ABSOLUTE' };
+}
+
+function secondsToHMS(seconds: number): string {
+  const hours: number = Math.floor(seconds / 3600);
+  const minutes: number = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds: number = seconds % 60;
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds
+    .toString()
+    .padStart(2, '0')}`;
+}
+
+function parseModel(node: SyntaxNode, text: string): Model[] | undefined {
+  const modelNodes = node.getChildren('Model');
+  if (modelNodes.length === 0) {
+    return undefined;
+  } else {
+    const models: Model[] = [];
+    modelNodes.map((modelNode: SyntaxNode) => {
+      const variableNode = modelNode.getChild('Variable');
+      const valueNode = modelNode.getChild('Value');
+      const offsetNode = modelNode.getChild('Offset');
+
+      models.push({
+        variable: variableNode ? (removeQuotes(text.slice(variableNode.from, variableNode.to)) as string) : 'UNKNOWN',
+        value: valueNode ? removeQuotes(text.slice(valueNode.from, valueNode.to)) : 0,
+        offset: offsetNode ? (removeQuotes(text.slice(offsetNode.from, offsetNode.to)) as string) : 'UNKNOWN',
+      });
+    });
+
+    return models;
+  }
+}
+
+function parseDescription(node: SyntaxNode, text: string): string | undefined {
+  const descriptionNode = node.getChild('Description')?.getChild('String');
+  if (descriptionNode) {
+    const description = text.slice(descriptionNode.from, descriptionNode.to);
+    return removeQuotes(description) as string;
+  }
+  return undefined;
+}
+
+function removeQuotes(text: string | number | boolean): string | number | boolean {
+  if (typeof text === 'string') {
+    return text.replace(/^"|"$/g, '');
+  }
+  return text;
+}
+
+export function parseGroundBlock(commandNode: SyntaxNode, text: string): GroundBlock {
+  const time = parseTime(commandNode, text);
+  const description = parseDescription(commandNode, text);
+  const models = parseModel(commandNode, text);
+  console.log(commandNode.toString());
+  const nameNode = commandNode.getChild('Name');
+  const name = nameNode ? (removeQuotes(text.slice(nameNode.from, nameNode.to)) as string) : 'UNKNOWN';
+
+  const argsNode = commandNode.getChild('Args');
+  const args = argsNode ? parseArgs(argsNode, text, null, '') : null;
+
+  return {
+    type: 'ground_block',
+    name,
+    time,
+    ...(description ? { description } : {}),
+    ...(models ? { models } : {}),
+    ...(args ? { args } : {}),
+  };
 }
 
 export function parseCommand(
