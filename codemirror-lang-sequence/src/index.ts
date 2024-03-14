@@ -9,6 +9,7 @@ import {
 } from '@codemirror/language';
 import { styleTags, tags as t } from '@lezer/highlight';
 import { parser } from './sequence.grammar';
+import { customFoldInside } from './utilities/custom-folder';
 
 export const SeqLanguage = LRLanguage.define({
   parser: parser.configure({
