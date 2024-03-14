@@ -1,6 +1,6 @@
 @top Sequence { expression+ }
 
-@skip { space | LineComment }
+@skip {LineComment }
 
 expression[@isGroup=Expression] {
   Id |
@@ -8,7 +8,8 @@ expression[@isGroup=Expression] {
   Local |
   Param |
   Global |
-  Command
+  Command |
+  GroundBlock
 }
 
 Id { @specialize<identifier, "id"> "(" String ")" }
@@ -17,11 +18,11 @@ Metadata { @specialize<identifier, "metadata"> "(" Object ")" }
 
 TimeTagAbsolute { @specialize<identifier, "abs"> "(" TimeAbsolute ")" }
 
-TimeTagComplete { @specialize<identifier, "cpl"> }
+TimeTagComplete { @specialize<identifier, "C"> }
 
-TimeTagEpoch { @specialize<identifier, "epc"> "(" TimeRelative  ")" }
+TimeTagEpoch { TimeEpoch }
 
-TimeTagRelative { @specialize<identifier, "rel"> "(" TimeRelative ")" }
+TimeTagRelative { TimeRelative }
 
 VarTypeFloat { @specialize<identifier, "FLOAT"> }
 
@@ -45,23 +46,54 @@ Global { @specialize<identifier, "global"> "(" VarType "," VarName ")" }
 
 arg { Boolean | Enum | Number | String }
 
-RepeatArg { "[" commaSep<arg> "]" }
+commaSep<elem> {
+  elem ("," elem)*
+}
 
-RepeatArgs { "[" commaSep<RepeatArg> "]" }
+repeatElement<elem> {
+  elem ("" elem)*
+}
 
-Args { "(" commaSep<arg | RepeatArgs> ")" }
+RepeatArg { "[" repeatElement<arg> "]" }
+
+RepeatArgs { "[" repeatElement<RepeatArg> "]" }
+
+Args { space repeatElement<arg | RepeatArgs> NewLine }
 
 Stem { identifier }
 
-Command { timeTag? Stem Args? }
+Command { timeTag? Stem (Args? | NewLine)? (
+    Description? Model* |
+    Model* Description?
+  )?
+}
+
+Name { String }
+NewLine { LINE }
+GroundBlock {
+  timeTag @specialize<identifier, "groundBlock"> "(" Name ")" (Args? | NewLine)? (
+    Description? Model* |
+    Model* Description?
+  )?
+}
+
+Description { @specialize<identifier, "description"> "(" String ")"}
+
+Model {
+  @specialize<identifier, "model"> "(" Variable "," Value "," Offset ")"
+}
+
+Variable { String }
+
+Offset { String }
+
+Value { String | Number | Boolean }
 
 Object { "{" commaSep<Property> "}" }
 
 Property {  String ":" String }
 
 timeTag { TimeTagAbsolute | TimeTagComplete | TimeTagEpoch | TimeTagRelative }
-
-commaSep<content> { content ("," content?)* }
 
 @tokens {
   identifier { @asciiLetter (@asciiLetter| @digit | "_" | "-")* }
@@ -70,7 +102,10 @@ commaSep<content> { content ("," content?)* }
 
   TimeAbsolute { @digit@digit@digit@digit"-"@digit@digit@digit"T"timeHhmmss }
 
-  TimeRelative { $[+\-]? (@digit@digit@digit"T")? timeHhmmss }
+  TimeRelative { 'R'$[1-9] @digit* }
+
+  TimeEpoch { 'E'$[+\-]timeHhmmss}
+
 
   String { '"' (!["\\] | "\\" _)* '"' }
 
@@ -83,15 +118,22 @@ commaSep<content> { content ("," content?)* }
     "0x" (hex | "_")+ "n"?
   }
 
-  Boolean { "true" | "false" }
+  TRUE { "TRUE" }
+  FALSE { "FALSE" }
+
+  LINE { "\n" }
+
+  Boolean { TRUE | FALSE}
 
   Enum { identifier }
 
   @precedence {  Boolean, Enum }
 
+  @precedence { TimeRelative, TimeEpoch, identifier}
+
   LineComment { "#" ![\n]* }
 
-  space { $[ \t\n\r]+ }
+  space { $[ \t\r]+ }
 }
 
 @detectDelim
