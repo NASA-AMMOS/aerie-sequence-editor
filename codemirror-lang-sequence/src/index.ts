@@ -9,6 +9,7 @@ import {
 } from '@codemirror/language';
 import { styleTags, tags as t } from '@lezer/highlight';
 import { parser } from './sequence.grammar';
+import { customFoldInside } from './utilities/custom-folder';
 
 export const SeqLanguage = LRLanguage.define({
   parser: parser.configure({
@@ -18,30 +19,16 @@ export const SeqLanguage = LRLanguage.define({
       }),
       foldNodeProp.add({
         Application: foldInside,
+        GroundBlock: customFoldInside,
+        Command: customFoldInside,
       }),
       styleTags({
         Boolean: t.bool,
-        Identifier: t.variableName,
-        Local: t.keyword,
-        LineComment: t.lineComment,
-        Enum: t.labelName,
-        Global: t.keyword,
-        Number: t.number,
-        Param: t.keyword,
         String: t.string,
-        TimeTagAbsolute: t.keyword,
-        TimeTagComplete: t.keyword,
-        TimeTagEpoch: t.keyword,
-        TimeTagRelative: t.keyword,
-        TimeAbsolute: t.keyword,
-        TimeRelative: t.keyword,
-        VarName: t.variableName,
-        VarTypeFloat: t.typeName,
-        VarTypeInt: t.typeName,
-        VarTypeString: t.typeName,
-        VarTypeUint: t.typeName,
-        VarTypeEnum: t.typeName,
-        '( )': t.paren,
+        GroundBlock: t.keyword,
+        Description: t.namespace,
+        Model: t.namespace,
+        Stem: t.keyword,
       }),
     ],
   }),
