@@ -38,23 +38,23 @@ export function sequenceCompletion(commandDictionary: CommandDictionary | null =
           type: 'keyword',
         },
         {
-          apply: 'cpl',
+          apply: 'C',
           info: 'Execute command after the previous command completes',
-          label: 'cpl (complete)',
+          label: 'C (command complete)',
           section: 'Time Tags',
           type: 'keyword',
         },
         {
-          apply: 'epc(00:00:00)',
+          apply: 'E+00:00:00',
           info: 'Execute command at an offset from an epoch',
-          label: 'epc (epoch)',
+          label: 'E (epoch)',
           section: 'Time Tags',
           type: 'keyword',
         },
         {
-          apply: 'rel(00:00:00)',
+          apply: 'R1',
           info: 'Execute command at an offset from the previous command',
-          label: 'rel (relative)',
+          label: 'R (relative)',
           section: 'Time Tags',
           type: 'keyword',
         },
@@ -81,8 +81,8 @@ export function sequenceCompletion(commandDictionary: CommandDictionary | null =
           let apply = stem;
 
           if (args.length) {
-            const argsStr = args.map(arg => fswCommandArgDefault(arg, commandDictionary.enumMap)).join(', ');
-            apply = `${stem}(${argsStr})`;
+            const argsStr = args.map(arg => fswCommandArgDefault(arg, commandDictionary.enumMap)).join(' ');
+            apply = `${stem} ${argsStr} `;
           }
 
           fswCommandsCompletions.push({
@@ -106,6 +106,14 @@ export function sequenceCompletion(commandDictionary: CommandDictionary | null =
             type: 'function',
           });
         }
+
+        fswCommandsCompletions.push({
+          apply: 'groundBlock("name")',
+          info: 'A ground block',
+          label: 'groundBlock',
+          section: 'Steps',
+          type: 'function',
+        });
       }
 
       return {
