@@ -4,6 +4,7 @@ import type {
   Args,
   BooleanArgument,
   Command,
+  GroundBlock,
   HexArgument,
   NumberArgument,
   RepeatArgument,
@@ -11,6 +12,8 @@ import type {
   StringArgument,
   Time,
   VariableDeclaration,
+  Model,
+  Metadata,
 } from '@nasa-jpl/seq-json-schema/types';
 import { logInfo } from './logger';
 
@@ -75,10 +78,17 @@ export function sequenceToSeqJson(node: Tree, text: string, commandDictionary: C
     if (cursor.node.name === 'Id') {
       const id = parseId(cursor.node, text);
       seqJson.id = id;
+    } else if (cursor.node.name === 'Metadata') {
+      const metadata = parseMetatdata(cursor.node, text);
+      seqJson.metadata = metadata;
     } else if (cursor.node.name === 'Command') {
       const command = parseCommand(cursor.node, text, commandDictionary);
       if (!seqJson.steps) seqJson.steps = [];
       seqJson.steps.push(command);
+    } else if (cursor.node.name === 'GroundBlock') {
+      const groundBlock = parseGroundBlock(cursor.node, text);
+      if (!seqJson.steps) seqJson.steps = [];
+      seqJson.steps.push(groundBlock);
     }
   }
 
@@ -97,7 +107,7 @@ export function parseArg(
   const fswCommandArg = fswCommand?.arguments[index] ?? null;
 
   if (node.name === 'Boolean') {
-    const value = JSON.parse(nodeValue);
+    const value = nodeValue === 'TRUE' ? true : false;
     const booleanArg: BooleanArgument = { type: 'boolean', value };
     if (fswCommandArg) {
       booleanArg.name = fswCommandArg.name;
@@ -247,17 +257,85 @@ export function parseTime(commandNode: SyntaxNode, text: string): Time {
 
   if (timeTagEpochNode) {
     const timeTagEpochText = text.slice(timeTagEpochNode.from, timeTagEpochNode.to);
-    const tag = parseTimeTag(timeTagEpochText);
+    const tag = timeTagEpochText.slice(1);
     return { tag, type: 'EPOCH_RELATIVE' };
   }
 
   if (timeTagRelativeNode) {
     const timeTagRelativeText = text.slice(timeTagRelativeNode.from, timeTagRelativeNode.to);
-    const tag = parseTimeTag(timeTagRelativeText);
+    const tag = timeTagRelativeText.length > 0 ? secondsToHMS(Number(timeTagRelativeText.slice(1))) : '00:00:00';
     return { tag, type: 'COMMAND_RELATIVE' };
   }
 
   return { tag: 'UNKNOWN', type: 'ABSOLUTE' };
+}
+
+function secondsToHMS(seconds: number): string {
+  const hours: number = Math.floor(seconds / 3600);
+  const minutes: number = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds: number = seconds % 60;
+  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds
+    .toString()
+    .padStart(2, '0')}`;
+}
+
+function parseModel(node: SyntaxNode, text: string): Model[] | undefined {
+  const modelNodes = node.getChildren('Model');
+  if (modelNodes.length === 0) {
+    return undefined;
+  } else {
+    const models: Model[] = [];
+    modelNodes.map((modelNode: SyntaxNode) => {
+      const variableNode = modelNode.getChild('Variable');
+      const valueNode = modelNode.getChild('Value');
+      const offsetNode = modelNode.getChild('Offset');
+
+      models.push({
+        variable: variableNode ? (removeQuotes(text.slice(variableNode.from, variableNode.to)) as string) : 'UNKNOWN',
+        value: valueNode ? removeQuotes(text.slice(valueNode.from, valueNode.to)) : 0,
+        offset: offsetNode ? (removeQuotes(text.slice(offsetNode.from, offsetNode.to)) as string) : 'UNKNOWN',
+      });
+    });
+
+    return models;
+  }
+}
+
+function parseDescription(node: SyntaxNode, text: string): string | undefined {
+  const descriptionNode = node.getChild('Description')?.getChild('String');
+  if (descriptionNode) {
+    const description = text.slice(descriptionNode.from, descriptionNode.to);
+    return removeQuotes(description) as string;
+  }
+  return undefined;
+}
+
+function removeQuotes(text: string | number | boolean): string | number | boolean {
+  if (typeof text === 'string') {
+    return text.replace(/^"|"$/g, '');
+  }
+  return text;
+}
+
+export function parseGroundBlock(commandNode: SyntaxNode, text: string): GroundBlock {
+  const time = parseTime(commandNode, text);
+  const description = parseDescription(commandNode, text);
+  const models = parseModel(commandNode, text);
+  console.log(commandNode.toString());
+  const nameNode = commandNode.getChild('Name');
+  const name = nameNode ? (removeQuotes(text.slice(nameNode.from, nameNode.to)) as string) : 'UNKNOWN';
+
+  const argsNode = commandNode.getChild('Args');
+  const args = argsNode ? parseArgs(argsNode, text, null, '') : null;
+
+  return {
+    type: 'ground_block',
+    name,
+    time,
+    ...(description ? { description } : {}),
+    ...(models ? { models } : {}),
+    ...(args ? { args } : {}),
+  };
 }
 
 export function parseCommand(
@@ -273,11 +351,16 @@ export function parseCommand(
   const argsNode = commandNode.getChild('Args');
   const args = argsNode ? parseArgs(argsNode, text, commandDictionary, stem) : [];
 
+  const description = parseDescription(commandNode, text);
+  const models = parseModel(commandNode, text);
+
   return {
     args,
     stem,
     time,
     type: 'command',
+    ...(description ? { description } : {}),
+    ...(models ? { models } : {}),
   };
 }
 
@@ -285,4 +368,23 @@ export function parseId(idNode: SyntaxNode, text: string): string {
   const stringNode = idNode.getChild('String');
   const id = stringNode ? JSON.parse(text.slice(stringNode.from, stringNode.to)) : '';
   return id;
+}
+
+export function parseMetatdata(metadataNode: SyntaxNode, text: string): Metadata {
+  const objectNode = metadataNode.getChild('Object');
+  const propertyNodes = objectNode?.getChildren('Property');
+
+  const obj: Metadata = {};
+  if (propertyNodes) {
+    propertyNodes.forEach(propertyNode => {
+      const keyValue = propertyNode.getChildren('String');
+      for (let i = 0; i < keyValue.length; i = i + 2) {
+        const p = keyValue[i] ? text.slice(keyValue[i].from + 1, keyValue[i].to - 1) : '';
+        const v = keyValue[i + 1] ? text.slice(keyValue[i + 1].from + 1, keyValue[i + 1].to - 1) : '';
+        obj[p] = v;
+      }
+    });
+  }
+
+  return obj;
 }
