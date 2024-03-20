@@ -19,9 +19,9 @@ TimeTagAbsolute { @specialize<identifier, "abs"> "(" TimeAbsolute ")" }
 
 TimeTagComplete { @specialize<identifier, "cpl"> }
 
-TimeTagEpoch { @specialize<identifier, "epc"> "(" TimeRelative  ")" }
+TimeTagEpoch { TimeEpoch }
 
-TimeTagRelative { @specialize<identifier, "rel"> "(" TimeRelative ")" }
+TimeTagRelative { TimeRelative }
 
 VarTypeFloat { @specialize<identifier, "FLOAT"> }
 
@@ -70,7 +70,10 @@ commaSep<content> { content ("," content?)* }
 
   TimeAbsolute { @digit@digit@digit@digit"-"@digit@digit@digit"T"timeHhmmss }
 
-  TimeRelative { $[+\-]? (@digit@digit@digit"T")? timeHhmmss }
+  TimeRelative { 'R'$[1-9] @digit* }
+
+  TimeEpoch { 'E'$[+\-]timeHhmmss}
+
 
   String { '"' (!["\\] | "\\" _)* '"' }
 
@@ -88,6 +91,8 @@ commaSep<content> { content ("," content?)* }
   Enum { identifier }
 
   @precedence {  Boolean, Enum }
+
+  @precedence { TimeRelative, TimeEpoch, identifier}
 
   LineComment { "#" ![\n]* }
 

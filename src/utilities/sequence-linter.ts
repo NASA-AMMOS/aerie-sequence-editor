@@ -20,7 +20,7 @@ export function getAllEnumSymbols(enumMap: EnumMap, enumName: string) {
 export function sequenceLinter(commandDictionary: CommandDictionary | null = null): Extension {
   return linter(view => {
     const cursor: TreeCursor = syntaxTree(view.state).cursor();
-    const diagnostics: Diagnostic[] = [];
+    let diagnostics: Diagnostic[] = [];
     let idCount = 0;
 
     do {
@@ -163,6 +163,11 @@ export function sequenceLinter(commandDictionary: CommandDictionary | null = nul
         }
       } else {
         // TODO.
+      }
+
+      // Only execute an adaptation provided LINT function if it exists
+      if (globalThis.LINT) {
+        diagnostics = [...diagnostics, ...globalThis.LINT(commandDictionary, view, node)];
       }
     } while (cursor.next());
 
