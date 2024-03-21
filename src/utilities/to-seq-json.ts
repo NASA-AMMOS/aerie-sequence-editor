@@ -236,34 +236,53 @@ export function parseTimeTag(text: string): string {
 }
 
 /**
+ *
+ * @param commandNode
+ * @param text
+ * @returns
+ */
+
+/**
  * Parses a time tag node and returns a Seq JSON time.
  * Defaults to an unknown absolute time if a command does not have a valid time tag.
  */
 export function parseTime(commandNode: SyntaxNode, text: string): Time {
-  const timeTagAbsoluteNode = commandNode.getChild('TimeTagAbsolute');
-  const timeTagCompleteNode = commandNode.getChild('TimeTagComplete');
-  const timeTagEpochNode = commandNode.getChild('TimeTagEpoch');
-  const timeTagRelativeNode = commandNode.getChild('TimeTagRelative');
+  const timeTagNode = commandNode.getChild('TimeTag');
 
-  if (timeTagAbsoluteNode) {
-    const timeTagAbsoluteText = text.slice(timeTagAbsoluteNode.from, timeTagAbsoluteNode.to);
-    const tag = parseTimeTag(timeTagAbsoluteText);
-    return { tag, type: 'ABSOLUTE' };
+  if (timeTagNode == null) {
+    return { tag: 'UNKNOWN', type: 'ABSOLUTE' };
   }
+
+  const timeTagAbsoluteNode = timeTagNode.getChild('TimeAbsolute');
+  const timeTagCompleteNode = timeTagNode.getChild('TimeComplete');
+  const timeTagEpochNode = timeTagNode.getChild('TimeEpoch');
+  const timeTagRelativeNode = timeTagNode.getChild('TimeRelative');
 
   if (timeTagCompleteNode) {
     return { type: 'COMMAND_COMPLETE' };
-  }
+  } else if (timeTagAbsoluteNode) {
+    const timeTagAbsoluteText = text.slice(timeTagAbsoluteNode.from + 1, timeTagAbsoluteNode.to);
+    const tag = parseTimeTag(timeTagAbsoluteText);
+    return { tag, type: 'ABSOLUTE' };
+  } else if (timeTagEpochNode) {
+    const timeTagEpochText = text.slice(timeTagEpochNode.from + 1, timeTagEpochNode.to).trim();
 
-  if (timeTagEpochNode) {
-    const timeTagEpochText = text.slice(timeTagEpochNode.from, timeTagEpochNode.to);
-    const tag = timeTagEpochText.slice(1);
+    // a regex to determine if this string [+/-]####T##:##:##
+    let tag = 'UNKNOWN';
+    if (/^[+|-]?\d{3}T[0-9]{2}:[0-9]{2}:[0-9]{2}$/g.test(timeTagEpochText)) {
+      tag = timeTagEpochText;
+    } else {
+      const [sign, time] = /^[+|-]?\d/g.exec(timeTagEpochText);
+      if (time !== null) {
+        tag = `${sign}${secondsToHMS(time)}`;
+      }
+    }
+
     return { tag, type: 'EPOCH_RELATIVE' };
-  }
-
-  if (timeTagRelativeNode) {
-    const timeTagRelativeText = text.slice(timeTagRelativeNode.from, timeTagRelativeNode.to);
-    const tag = timeTagRelativeText.length > 0 ? secondsToHMS(Number(timeTagRelativeText.slice(1))) : '00:00:00';
+  } else if (timeTagRelativeNode) {
+    const timeTagRelativeText = text.slice(timeTagRelativeNode.from + 1, timeTagRelativeNode.to).trim();
+    // a regex to determine if this string ####T##:##:##
+    const tag = /^[0-9]{3}T[0-9]{2}:[0-9]{2}:[0-9]{2}$/g.test(timeTagRelativeText) ? text : secondsToHMS(Number(text));
     return { tag, type: 'COMMAND_RELATIVE' };
   }
 

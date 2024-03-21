@@ -1,111 +1,98 @@
-@top Sequence { expression+ }
-
-@skip {LineComment }
+@top Sequence {
+  (whiteSpace | newLine )* // support empty white space at the beginning of the file before user is typing
+  Metadata?
+  LoadNGO?
+  Parameters?
+  Locals?
+  expression
+}
 
 expression[@isGroup=Expression] {
-  Id |
-  Metadata |
-  Local |
-  Param |
-  Global |
-  Command |
-  GroundBlock
+    Commands | ImmediateCommands | HardwareCommands
 }
 
-Id { @specialize<identifier, "id"> "(" String ")" }
+//
+// Sections
+//
 
-Metadata { @specialize<identifier, "metadata"> "(" Object ")" }
-
-TimeTagAbsolute { @specialize<identifier, "abs"> "(" TimeAbsolute ")" }
-
-TimeTagComplete { @specialize<identifier, "C"> }
-
-TimeTagEpoch { TimeEpoch }
-
-TimeTagRelative { TimeRelative }
-
-VarTypeFloat { @specialize<identifier, "FLOAT"> }
-
-VarTypeInt { @specialize<identifier, "INT"> }
-
-VarTypeString { @specialize<identifier, "STRING"> }
-
-VarTypeUint { @specialize<identifier, "UINT"> }
-
-VarTypeEnum { @specialize<identifier, "ENUM"> }
-
-VarType { VarTypeFloat | VarTypeInt | VarTypeString | VarTypeUint | VarTypeEnum }
-
-VarName { identifier }
-
-Param { @specialize<identifier, "param"> "(" VarType "," VarName ")" }
-
-Local { @specialize<identifier, "local"> "(" VarType "," VarName ")" }
-
-Global { @specialize<identifier, "global"> "(" VarType "," VarName ")" }
-
-arg { Boolean | Enum | Number | String }
-
-commaSep<elem> {
-  elem ("," elem)*
+Commands {
+  ((LineComment newLine?) | (!TimeTag(Command)) )+
 }
 
-repeatElement<elem> {
-  elem ("" elem)*
+ImmediateCommands {
+  "@IMMEDIATE_COMMANDS"( whiteSpace | newLine )? (!TimeTag( Command ))+
 }
 
-RepeatArg { "[" repeatElement<arg> "]" }
+HardwareCommands {
+  "@HARDWARE_COMMANDS"( whiteSpace | newLine )? (!TimeTag( Command ))+
+}
 
-RepeatArgs { "[" repeatElement<RepeatArg> "]" }
+Parameters {
+  '@INPUT_PARAMS' (whiteSpace+ Parameter newLine?)+ (whiteSpace newLine)?
+}
+Parameter { identifier }
 
-Args { space repeatElement<arg | RepeatArgs> NewLine }
+Locals { '@LOCALS' (whiteSpace+ Local newLine?)+ (whiteSpace newLine)? }
+Local { identifier }
 
+LoadNGO { '@LOAD_AND_GO'( whiteSpace | newLine )* }
+
+Command {
+  TimeTag? Stem whiteSpace? Args? Description? (newLine? | newLine whiteSpace* ) (
+    (Models? Metadata?) | ( Metadata? Models?)
+  )?
+}
+
+TimeTag { TimeAbsolute | TimeEpoch | TimeRelative  | TimeComplete }
 Stem { identifier }
-
-Command { timeTag? Stem (Args? | NewLine)? (
-    Description? Model* |
-    Model* Description?
-  )?
+Args {
+  (arg whiteSpace? | RepeatArgs whiteSpace?)+
 }
-
-Name { String }
-NewLine { LINE }
-GroundBlock {
-  timeTag @specialize<identifier, "groundBlock"> "(" Name ")" (Args? | NewLine)? (
-    Description? Model* |
-    Model* Description?
-  )?
+RepeatArgs {
+  "[" whiteSpace? (RepeatArg whiteSpace?)* "]"
 }
+RepeatArg {
+  "[" whiteSpace? (arg whiteSpace?)* "]"
+}
+arg { Number | String }
 
-Description { @specialize<identifier, "description"> "(" String ")"}
+//Description { lineComment }
+//Comment { fullLineComment}
+//Comments { Comment+ }
 
+
+Models { Model+ }
 Model {
-  @specialize<identifier, "model"> "(" Variable "," Value "," Offset ")"
+  '@MODEL' whiteSpace Variable whiteSpace Value whiteSpace Offset (whiteSpace | newLine )*
 }
-
 Variable { String }
-
 Offset { String }
-
 Value { String | Number | Boolean }
 
-Object { "{" commaSep<Property> "}" }
+Metadata { MetaEntry+ }
+MetaEntry {
+  '@METADATA' whiteSpace MetaKey whiteSpace MetaValue (whiteSpace | newLine )*
+}
+MetaKey { String }
+MetaValue { String }
 
-Property {  String ":" String }
-
-timeTag { TimeTagAbsolute | TimeTagComplete | TimeTagEpoch | TimeTagRelative }
 
 @tokens {
   identifier { @asciiLetter (@asciiLetter| @digit | "_" | "-")* }
 
-  timeHhmmss { @digit@digit":"@digit@digit":"@digit@digit("."@digit@digit@digit)? }
+  timeHhmmss { @digit@digit":"@digit@digit":"@digit@digit }
 
-  TimeAbsolute { @digit@digit@digit@digit"-"@digit@digit@digit"T"timeHhmmss }
+  timeDOY { @digit@digit@digit"T"timeHhmmss }
 
-  TimeRelative { 'R'$[1-9] @digit* }
+  timeSecond { $[1-9] @digit* }
 
-  TimeEpoch { 'E'$[+\-]timeHhmmss}
+  TimeAbsolute { 'A'@digit@digit@digit@digit"-"@digit@digit@digit"T"timeHhmmss whiteSpace }
 
+  TimeRelative { 'R'(timeSecond | timeDOY | timeHhmmss) whiteSpace}
+
+  TimeEpoch { 'E'$[+\-]?(timeSecond | timeDOY) whiteSpace}
+
+  TimeComplete { 'C' whiteSpace }
 
   String { '"' (!["\\] | "\\" _)* '"' }
 
@@ -121,19 +108,20 @@ timeTag { TimeTagAbsolute | TimeTagComplete | TimeTagEpoch | TimeTagRelative }
   TRUE { "TRUE" }
   FALSE { "FALSE" }
 
-  LINE { "\n" }
+  Boolean { TRUE | FALSE }
 
-  Boolean { TRUE | FALSE}
+  Description { "//"![\n\r]* }
 
-  Enum { identifier }
+  LineComment { "#"![\n\r]* }
 
-  @precedence {  Boolean, Enum }
+  newLine { "\n"+ | "\r"+ | "\r\n"+ | "\n\r"+ }
 
-  @precedence { TimeRelative, TimeEpoch, identifier}
+  whiteSpace { $[ \t]+ }
 
-  LineComment { "#" ![\n]* }
+  @precedence{ TimeAbsolute, TimeRelative, TimeEpoch, TimeComplete, identifier, LineComment, Description}
 
-  space { $[ \t\r]+ }
 }
+
+@precedence {TimeTag }
 
 @detectDelim

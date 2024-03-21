@@ -1,9 +1,7 @@
 import type { SyntaxNode } from '@lezer/common';
 
 export function customFoldInside(node: SyntaxNode): { from: number; to: number } | null {
-  if (node.name === 'GroundBlock') {
-    return foldGroundBlock(node);
-  } else if (node.name === 'Command') {
+  if (node.name === 'Command') {
     return foldCommand(node);
   }
   return null;
@@ -12,7 +10,7 @@ export function customFoldInside(node: SyntaxNode): { from: number; to: number }
 function foldCommand(node: SyntaxNode): { from: number; to: number } | null {
   const stemNode = node.getChild('Stem');
   const argsNodes = node.getChildren('Args');
-  const descriptionNode = node.getChild('Description');
+  const metadataNode = node.getChildren('Metadata');
   const modelNodes = node.getChildren('Model');
 
   if (stemNode == null) {
@@ -21,46 +19,17 @@ function foldCommand(node: SyntaxNode): { from: number; to: number } | null {
 
   let from = calculateStartAndEnd([stemNode]).to;
   if (argsNodes.length > 0) {
-    from = calculateStartAndEnd(argsNodes).to - 1;
+    from = calculateStartAndEnd(argsNodes).to;
   }
 
   // determine which node starts sooner if both exist
-  if (descriptionNode && modelNodes.length > 0) {
-    const { to: to } = calculateStartAndEnd(modelNodes.concat([descriptionNode]));
+  if (metadataNode.length > 0 && modelNodes.length > 0) {
+    const { to: to } = calculateStartAndEnd(modelNodes.concat(metadataNode));
     return { from, to };
-  } else if (descriptionNode) {
-    const { to: to } = calculateStartAndEnd([descriptionNode]);
+  } else if (metadataNode) {
+    const { to: to } = calculateStartAndEnd(metadataNode);
     return { from, to };
-  } else if (modelNodes.length > 0) {
-    const { to: to } = calculateStartAndEnd(modelNodes);
-    return { from, to };
-  }
-  return null;
-}
-
-function foldGroundBlock(node: SyntaxNode): { from: number; to: number } | null {
-  const descriptionNode = node.getChild('Description');
-  const modelNodes = node.getChildren('Model');
-  const nameNode = node.getChild('Name');
-  const argsNodes = node.getChildren('Args');
-
-  if (nameNode === null) {
-    return null;
-  }
-
-  let from = calculateStartAndEnd([nameNode]).to + 1;
-  if (argsNodes.length > 0) {
-    from = calculateStartAndEnd(argsNodes).to - 1;
-  }
-
-  // determine which node starts sooner if both exist
-  if (descriptionNode && modelNodes.length > 0) {
-    const { to: to } = calculateStartAndEnd(modelNodes.concat([descriptionNode]));
-    return { from, to };
-  } else if (descriptionNode) {
-    const { to: to } = calculateStartAndEnd([descriptionNode]);
-    return { from, to };
-  } else if (modelNodes.length > 0) {
+  } else if (modelNodes) {
     const { to: to } = calculateStartAndEnd(modelNodes);
     return { from, to };
   }
