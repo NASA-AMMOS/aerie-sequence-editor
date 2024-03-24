@@ -83,3 +83,36 @@ Sequence(Commands(
   Command(Stem,Args(Enum,Enum),LineComment),
   LineComment
 ))
+
+# Locals and commands
+
+@LOCAL L01STRING L02INT
+FSW_CMD 1 2
+FSW_CMD2
+==>
+
+Sequence(
+  LocalDeclaration(Enum,Enum),
+  Commands(
+    Command(Stem,Args(Number,Number)),
+    Command(Stem,Args)
+  )
+)
+
+
+# Parameters, locals, and commands
+
+@PARAMETER L01STRING L02INT
+@LOCAL L01STRING L02INT
+FSW_CMD 1 2
+FSW_CMD2
+==>
+
+Sequence(
+  ParameterDeclaration(Enum,Enum),
+  LocalDeclaration(Enum,Enum),
+  Commands(
+    Command(Stem,Args(Number,Number)),
+    Command(Stem,Args)
+  )
+)

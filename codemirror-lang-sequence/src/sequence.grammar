@@ -1,5 +1,7 @@
 @top Sequence {
   IdDeclaration?
+  ParameterDeclaration?
+  LocalDeclaration?
   Metadata*
   Commands?
   ImmediateCommands?
@@ -10,6 +12,14 @@
 
 IdDeclaration {
   idDirective whiteSpace String whiteSpace? newLine
+}
+
+LocalDeclaration {
+  localsDirective (whiteSpace Enum)+ whiteSpace? newLine
+}
+
+ParameterDeclaration {
+  parameterDirective (whiteSpace Enum)+ whiteSpace? newLine
 }
 
 commandBlock {
@@ -129,6 +139,8 @@ Stem { !stemStart identifier }
   LoadAndGoDirective { "@LOAD_AND_GO"}
   immediateDirective { "@IMMEDIATE" }
   hardwareDirective { "@HARDWARE" }
+  localsDirective { "@LOCAL" }
+  parameterDirective { "@PARAMETER" }
   MetadataDirective { "@METADATA" }
   ModelDirective { "@MODEL" }
   // Directive { "@" identifier }
@@ -139,6 +151,8 @@ Stem { !stemStart identifier }
     ModelDirective,
     immediateDirective,
     hardwareDirective,
+    localsDirective,
+    parameterDirective,
     LoadAndGoDirective
     // Directive
   }
