@@ -1,192 +1,85 @@
 # Command with no args
 
 FSW_CMD
+
 ==>
 Sequence(
-  Command(Stem)
-)
-
-
-
-
-# Command with two boolean args
-
-FSW_CMD(true, false)
-==>
-Sequence(
-  Command(Stem,Args(Boolean,Boolean))
-)
-
-
-
-
-# Sequence with params, locals, and globals
-
-param(FLOAT, foo)
-param(INT, bar)
-param(STRING, baz)
-param(UINT, steak)
-param(ENUM, eggs)
-
-local(FLOAT, foo)
-local(INT, bar)
-local(STRING, baz)
-local(UINT, steak)
-local(ENUM, eggs)
-
-global(FLOAT, foo)
-global(INT, bar)
-global(STRING, baz)
-global(UINT, steak)
-global(ENUM, eggs)
-
-FSW_CMD(true)
-==>
-Sequence(
-  Param(VarType(VarTypeFloat), VarName),
-  Param(VarType(VarTypeInt), VarName),
-  Param(VarType(VarTypeString), VarName),
-  Param(VarType(VarTypeUint), VarName),
-  Param(VarType(VarTypeEnum), VarName),
-
-  Local(VarType(VarTypeFloat), VarName),
-  Local(VarType(VarTypeInt), VarName),
-  Local(VarType(VarTypeString), VarName),
-  Local(VarType(VarTypeUint), VarName),
-  Local(VarType(VarTypeEnum), VarName),
-
-  Global(VarType(VarTypeFloat), VarName),
-  Global(VarType(VarTypeInt), VarName),
-  Global(VarType(VarTypeString), VarName),
-  Global(VarType(VarTypeUint), VarName),
-  Global(VarType(VarTypeEnum), VarName),
-
-  Command(Stem,Args(Boolean))
-)
-
-
-
-
-# Command with number args
-
-FSW_CMD(3.14, 42, 0xFF)
-==>
-Sequence(
-  Command(Stem,Args(Number,Number,Number))
-)
-
-
-
-
-# Command with enum args
-
-FSW_CMD(HELLO_WORLD, true, THING_2)
-==>
-Sequence(
-  Command(Stem,Args(Enum,Boolean,Enum))
-)
-
-
-
-
-# Command with all arguments
-
-FSW_CMD(42, true, "hello", 0xFF, [[23, "goodbye"], [33, "hi"]])
-==>
-Sequence(
-  Command(
-    Stem,
-    Args(
-      Number,
-      Boolean,
-      String,
-      Number,
-      RepeatArgs(
-        RepeatArg(Number,String),
-        RepeatArg(Number,String)
-      )
-    )
+  Commands(
+    Command(Stem,Args)
   )
 )
 
+# Command with two string args
 
-
-
-# Sequence with ID
-
-id("abcdefg")
-FSW_CMD(true)
+FSW_CMD "hello" "world"
 ==>
 Sequence(
-  Id(String),
-  Command(Stem,Args(Boolean))
+  Commands(
+    Command(Stem,Args(String,String))
+  )
 )
 
+# Command with mixed args
 
-
-
-# Sequence with three commands
-
-FSW_CMD_1(true)
-FSW_CMD_2("DOWN")
-FSW_CMD_3(42)
+FSW_CMD "hello" 10
 ==>
-Sequence(
-  Command(Stem,Args(Boolean)),
-  Command(Stem, Args(String)),
-  Command(Stem, Args(Number))
-)
+Sequence(Commands(
+  Command(Stem,Args(String,Number))
+))
 
+# Command with mixed args and comment
 
-
-
-# Command with absolute time
-
-abs(2020-001T00:00:00) FSW_CMD(true)
-
+FSW_CMD "hello" 10   # yay comment
 ==>
-Sequence(
-  Command(TimeTagAbsolute(TimeAbsolute), Stem, Args(Boolean))
-)
+Sequence(Commands(
+  Command(Stem,Args(String,Number),LineComment)
+))
 
+# 2 Commands
 
-
-
-# Command with complete time
-
-cpl FSW_CMD(true)
-
+FSW_CMD "hello" "world"
+FSW_CMD "hello" 10
 ==>
-Sequence(
-  Command(TimeTagComplete, Stem, Args(Boolean))
-)
+Sequence(Commands(
+  Command(Stem,Args(String,String)),
+  Command(Stem,Args(String,Number))
+))
 
+# Command with two sting args
 
-
-
-# Command with epoch time
-
-epc(-004T02:03:04.567) FSW_CMD(true)
-epc(03:40:30.001) FSW_CMD_3("")
-epc(00:00:00) FSW_CMD(42)
+FSW_CMD "TRUE" "FALSE" # end of line
+# full line comment
 ==>
-Sequence(
-  Command(TimeTagEpoch(TimeRelative), Stem, Args(Boolean)),
-  Command(TimeTagEpoch(TimeRelative), Stem, Args(String)),
-  Command(TimeTagEpoch(TimeRelative), Stem, Args(Number))
-)
+Sequence(Commands(
+  Command(Stem,Args(String,String),LineComment),
+  LineComment
+))
 
+# Command with enum args (disallowed in linter)
 
-
-
-# Command with relative time
-
-rel(-001T02:03:04.567) FSW_CMD(true)
-rel(03:40:30.001) FSW_CMD_3("")
-rel(00:00:00) FSW_CMD(42)
+FSW_CMD TRUE FALSE
 ==>
-Sequence(
-  Command(TimeTagRelative(TimeRelative), Stem, Args(Boolean)),
-  Command(TimeTagRelative(TimeRelative), Stem, Args(String)),
-  Command(TimeTagRelative(TimeRelative), Stem, Args(Number))
-)
+
+Sequence(Commands(Command(Stem,Args(Enum,Enum))))
+
+# Command with enum args (disallowed in linter) and comment
+
+FSW_CMD TRUE FALSE
+# Com
+==>
+
+Sequence(Commands(
+  Command(Stem,Args(Enum,Enum)),
+  LineComment
+))
+
+# Command with enum args (disallowed in linter) and more comments
+
+FSW_CMD TRUE FALSE # Com 1
+# Com
+==>
+
+Sequence(Commands(
+  Command(Stem,Args(Enum,Enum),LineComment),
+  LineComment
+))

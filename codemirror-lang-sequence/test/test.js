@@ -1,7 +1,7 @@
 /* eslint-disable no-undef */
 
 import { SeqLanguage } from '../dist/index.js';
-import { fileTests } from '@lezer/generator/dist/test';
+import { testTree } from '@lezer/generator/dist/test';
 import { readFileSync, readdirSync } from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
@@ -17,4 +17,43 @@ for (const file of readdirSync(caseDir)) {
       it(name, () => run(SeqLanguage.parser));
     }
   });
+}
+
+// lezer's fileTests strips whitespace off test strings
+function fileTests(file, fileName, mayIgnore) {
+  var caseExpr = /\s*#[ \t]*(.*)(?:\r\n|\r|\n)([^]*?)==+>([^]*?)(?:$|(?:\r\n|\r|\n)+(?=#))/gy;
+  var tests = [];
+  var lastIndex = 0;
+  var _loop_1 = function () {
+    var m = caseExpr.exec(file);
+    if (!m)
+      throw new Error(
+        'Unexpected file format in '.concat(fileName, ' around\n\n').concat(toLineContext(file, lastIndex)),
+      );
+    var text = m[2].trimStart(),
+      expected = m[3].trim();
+    var _a = /(.*?)(\{.*?\})?$/.exec(m[1]),
+      name_2 = _a[1],
+      configStr = _a[2];
+    var config = configStr ? JSON.parse(configStr) : null;
+    var strict = !/⚠|\.\.\./.test(expected);
+    tests.push({
+      name: name_2,
+      text: text,
+      expected: expected,
+      configStr: configStr,
+      config: config,
+      strict: strict,
+      run: function (parser) {
+        testTree(parser.parse(text), expected, mayIgnore);
+      },
+    });
+    lastIndex = m.index + m[0].length;
+    if (lastIndex == file.length) return 'break';
+  };
+  for (;;) {
+    var state_1 = _loop_1();
+    if (state_1 === 'break') break;
+  }
+  return tests;
 }
