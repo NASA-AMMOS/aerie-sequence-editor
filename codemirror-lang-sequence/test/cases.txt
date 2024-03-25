@@ -106,7 +106,9 @@ Sequence(Commands(
 # declare my local variables, types are defined in adaptation
 # comment before directive
 @LOCAL L01STRING L02INT
-# early comment
+# before metadata comment
+@METADATA "foo" "val foo"
+# before commands comment
 FSW_CMD 1 2
 FSW_CMD2
 ==>
@@ -117,6 +119,10 @@ Sequence(
   LineComment,
   LineComment,
   LocalDeclaration(Enum,Enum),
+  LineComment,
+  Metadata(
+    MetaEntry(Key(String),Value(String))
+  ),
   Commands(
     LineComment,
     Command(Stem,Args(Number,Number)),
@@ -180,27 +186,35 @@ CMD_1 1 2 3
 @METADATA "bar" "val bar"
 
 CMD_2 "hello, it's me"
-@METADATA "bar" "val bar2"
-@MODEL "a" "b" "c"
-@MODEL "d" "e" "f"
+@METADATA "bar" "{ \"foo\": 5}"
+@MODEL "a" 5 "c"
+@MODEL "d" TRUE "f"
 ==>
 
 Sequence(
   IdDeclaration(String),
-  Metadata(String,String),
+  Metadata(
+    MetaEntry(Key(String),Value(String))
+  ),
   Commands(
     Command(
       Stem,
       Args(Number,Number,Number),
-      Metadata(String,String),
-      Metadata(String,String)
+      Metadata(
+        MetaEntry(Key(String),Value(String)),
+        MetaEntry(Key(String),Value(String))
+      )
     ),
     Command(
       Stem,
       Args(String),
-      Metadata(String,String),
-      Model(String,String,String),
-      Model(String,String,String)
+      Metadata(
+        MetaEntry(Key(String),Value(String))
+      ),
+      Models(
+        Model(Variable(String),Value(Number),Offset(String)),
+        Model(Variable(String),Value(Boolean),Offset(String))
+      )
     )
   )
 )
@@ -226,20 +240,28 @@ Sequence(
 
 Sequence(
   IdDeclaration(String),
-  Metadata(String,String),
+  Metadata(
+    MetaEntry(Key(String),Value(String))
+  ),
   Commands(
     Command(
       Stem,
       Args(Number,Number,Number),
-      Metadata(String,String),
-      Metadata(String,String)
+      Metadata(
+        MetaEntry(Key(String),Value(String)),
+        MetaEntry(Key(String),Value(String))
+      )
     ),
     Command(
       Stem,
       Args(String),
-      Metadata(String,String),
-      Model(String,String,String),
-      Model(String,String,String)
+      Metadata(
+        MetaEntry(Key(String),Value(String))
+      ),
+      Models(
+        Model(Variable(String),Value(String),Offset(String)),
+        Model(Variable(String),Value(String),Offset(String))
+      )
     )
   )
 )

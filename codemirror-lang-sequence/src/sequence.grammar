@@ -5,7 +5,8 @@
   ParameterDeclaration?
   commentLine* ~maybeComments
   LocalDeclaration?
-  Metadata*
+  commentLine* ~maybeComments
+  Metadata?
   Commands?
   ImmediateCommands?
   HardwareCommands?
@@ -14,10 +15,11 @@
 // Potential Improvements
 // allow indentation of directives
 
+// Directive { "@"identifier }
+// LoadAndGoDirective2 { @specialize<Directive, "LOAD_AND_GO"> }
+
 @precedence {
-  stemStart @cut,
-  p1,
-  p2
+  stemStart @cut
 }
 
 IdDeclaration {
@@ -81,25 +83,28 @@ Command {
   Args
   LineComment?
   newLine
-  !p2
-  Metadata*
-  Model*
+  Metadata?
+  Models?
 }
 
-Metadata {
+Metadata { MetaEntry+ }
+
+MetaEntry {
   // whiteSpace?
   metadataDirective
-  whiteSpace String
-  whiteSpace String
+  whiteSpace Key { String }
+  whiteSpace Value { String }
   whiteSpace? newLine
 }
+
+Models { Model+ }
 
 Model {
   // whiteSpace?
   modelDirective
-  whiteSpace String
-  whiteSpace String
-  whiteSpace String
+  whiteSpace Variable { String }
+  whiteSpace Value { String | Number | Boolean }
+  whiteSpace Offset { String }
   whiteSpace? newLine
 }
 
@@ -135,17 +140,18 @@ Stem { !stemStart identifier }
     "0x" (hex | "_")+ "n"?
   }
 
+  TRUE { "TRUE" }
+  FALSE { "FALSE" }
+
+  Boolean { TRUE | FALSE }
+
   LineComment { "#"![\n\r]* }
 
   newLine { "\n" }
 
   whiteSpace { $[ \t]+ }
 
-  @precedence{ TimeAbsolute, TimeRelative, TimeEpoch, TimeComplete, identifier }
-
-  // Directive { "@"identifier }
   idDirective { "@ID" }
-  // LoadAndGoDirective2 { @specialize<Directive, "LOAD_AND_GO"> }
   LoadAndGoDirective { "@LOAD_AND_GO"}
   immediateDirective { "@IMMEDIATE" }
   hardwareDirective { "@HARDWARE" }
@@ -153,6 +159,8 @@ Stem { !stemStart identifier }
   parameterDirective { "@PARAMETER" }
   metadataDirective { "@METADATA" }
   modelDirective { "@MODEL" }
+
+  @precedence{ TimeAbsolute, TimeRelative, TimeEpoch, TimeComplete, identifier }
 
   @precedence {
     idDirective,
