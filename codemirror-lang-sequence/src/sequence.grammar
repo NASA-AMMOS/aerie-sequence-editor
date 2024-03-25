@@ -8,7 +8,9 @@
   HardwareCommands?
 }
 
-@precedence { stemStart @cut, p1, p2 }
+@precedence { stemStart @cut,
+  p1 @right, p2 @right, p3 @left
+}
 
 IdDeclaration {
   idDirective whiteSpace String whiteSpace? newLine
@@ -72,16 +74,16 @@ Command {
 }
 
 Metadata {
-  // (whiteSpace !p1)?
-  metadataDirective
+  // whiteSpace?
+  metadataDirective !p1
   whiteSpace String
   whiteSpace String
   whiteSpace? newLine
 }
 
 Model {
-  // (whiteSpace !p1)?
-  modelDirective
+  // whiteSpace?
+  modelDirective !p1
   whiteSpace String
   whiteSpace String
   whiteSpace String

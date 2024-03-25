@@ -35,14 +35,22 @@ Sequence(Commands(
   Command(Stem,Args(String,Number),LineComment)
 ))
 
-# 2 Commands
+# Commands with different time tags
 
-FSW_CMD "hello" "world"
-FSW_CMD "hello" 10
+A2030-001T12:34:56 FSW_CMD "hello" "world"
+R10 FSW_CMD "hello" 10
 ==>
 Sequence(Commands(
-  Command(Stem,Args(String,String)),
-  Command(Stem,Args(String,Number))
+  Command(
+    TimeTag(TimeAbsolute),
+    Stem,
+    Args(String,String)
+  ),
+  Command(
+    TimeTag(TimeRelative),
+    Stem,
+    Args(String,Number)
+  )
 ))
 
 # Command with two sting args
@@ -106,6 +114,23 @@ Sequence(
   )
 )
 
+# Parameters, locals, and indented commands
+
+@PARAMETER L01STRING L02INT
+@LOCAL L01STRING L02INT
+     FSW_CMD 1 2
+     FSW_CMD2 "string val"
+==>
+
+Sequence(
+  ParameterDeclaration(Enum,Enum),
+  LocalDeclaration(Enum,Enum),
+  Commands(
+    Command(Stem,Args(Number,Number)),
+    Command(Stem,Args(String))
+  )
+)
+
 # Commands with models and metadata
 
 @ID "big test"
@@ -143,6 +168,15 @@ Sequence(
   )
 )
 
+# Bad Input - Invalid stems
+
+C 2_STEM_NAME
+STEM$BAR
+
+==>
+
+Sequence(Commands(Command(TimeTag(TimeComplete),⚠(Number),Stem,Args),Command(Stem,⚠),Command(Stem,Args,⚠)))
+
 # Commands with models and metadata, with mixed indentation
 
 @ID "big test"
@@ -154,7 +188,7 @@ CMD_1 1 2 3
   @METADATA "foo" "val\" foo2"
  @METADATA "bar" "val bar"
 
-CMD_2 "hello, it's me"
+         CMD_2 "hello, it's me"
 @METADATA "bar" "val bar2"
  @MODEL "a" "b" "c"
   @MODEL "d" "e" "f"
