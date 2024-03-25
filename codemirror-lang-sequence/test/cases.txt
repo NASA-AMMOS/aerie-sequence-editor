@@ -62,18 +62,7 @@ FSW_CMD TRUE FALSE
 
 Sequence(Commands(Command(Stem,Args(Enum,Enum))))
 
-# Command with enum args (disallowed in linter) and comment
-
-FSW_CMD TRUE FALSE
-# Com
-==>
-
-Sequence(Commands(
-  Command(Stem,Args(Enum,Enum)),
-  LineComment
-))
-
-# Command with enum args (disallowed in linter) and more comments
+# Command with enum args (disallowed in linter) and comments
 
 FSW_CMD TRUE FALSE # Com 1
 # Com
@@ -114,5 +103,79 @@ Sequence(
   Commands(
     Command(Stem,Args(Number,Number)),
     Command(Stem,Args)
+  )
+)
+
+# Commands with models and metadata
+
+@ID "big test"
+
+@METADATA "foo" "val foo"
+
+
+CMD_1 1 2 3
+@METADATA "foo" "val\" foo2"
+@METADATA "bar" "val bar"
+
+CMD_2 "hello, it's me"
+@METADATA "bar" "val bar2"
+@MODEL "a" "b" "c"
+@MODEL "d" "e" "f"
+==>
+
+Sequence(
+  IdDeclaration(String),
+  Metadata(String,String),
+  Commands(
+    Command(
+      Stem,
+      Args(Number,Number,Number),
+      Metadata(String,String),
+      Metadata(String,String)
+    ),
+    Command(
+      Stem,
+      Args(String),
+      Metadata(String,String),
+      Model(String,String,String),
+      Model(String,String,String)
+    )
+  )
+)
+
+# Commands with models and metadata, with mixed indentation
+
+@ID "big test"
+
+    @METADATA "foo" "val foo"
+
+
+CMD_1 1 2 3
+  @METADATA "foo" "val\" foo2"
+ @METADATA "bar" "val bar"
+
+CMD_2 "hello, it's me"
+@METADATA "bar" "val bar2"
+ @MODEL "a" "b" "c"
+  @MODEL "d" "e" "f"
+==>
+
+Sequence(
+  IdDeclaration(String),
+  Metadata(String,String),
+  Commands(
+    Command(
+      Stem,
+      Args(Number,Number,Number),
+      Metadata(String,String),
+      Metadata(String,String)
+    ),
+    Command(
+      Stem,
+      Args(String),
+      Metadata(String,String),
+      Model(String,String,String),
+      Model(String,String,String)
+    )
   )
 )

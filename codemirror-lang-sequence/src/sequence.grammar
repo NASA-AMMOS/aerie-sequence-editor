@@ -8,18 +8,18 @@
   HardwareCommands?
 }
 
-@precedence { stemStart @cut }
+@precedence { stemStart @cut, p1, p2 }
 
 IdDeclaration {
   idDirective whiteSpace String whiteSpace? newLine
 }
 
-LocalDeclaration {
-  localsDirective (whiteSpace Enum)+ whiteSpace? newLine
-}
-
 ParameterDeclaration {
   parameterDirective (whiteSpace Enum)+ whiteSpace? newLine
+}
+
+LocalDeclaration {
+  localsDirective (whiteSpace Enum)+ whiteSpace? newLine
 }
 
 commandBlock {
@@ -61,8 +61,8 @@ RepeatArg {
 arg { Number | String | Enum }
 
 Command {
-  whiteSpace? ~leadingWhitespace
-  TimeTag?
+  whiteSpace?
+  TimeTag? !p2
   Stem
   Args
   LineComment?
@@ -72,16 +72,16 @@ Command {
 }
 
 Metadata {
-  // whiteSpace? ~leadingWhitespace
-  MetadataDirective
+  // (whiteSpace !p1)?
+  metadataDirective
   whiteSpace String
   whiteSpace String
   whiteSpace? newLine
 }
 
 Model {
-  // whiteSpace? ~leadingWhitespace
-  ModelDirective
+  // (whiteSpace !p1)?
+  modelDirective
   whiteSpace String
   whiteSpace String
   whiteSpace String
@@ -126,34 +126,27 @@ Stem { !stemStart identifier }
 
   whiteSpace { $[ \t]+ }
 
-  @precedence{
-    TimeAbsolute,
-    TimeRelative,
-    TimeEpoch,
-    TimeComplete,
-    identifier
-  }
+  @precedence{ TimeAbsolute, TimeRelative, TimeEpoch, TimeComplete, identifier }
 
-  idDirective {"@ID" }
-  // LoadAndGoDirective { @specialize<Directive, "@LOAD_AND_GO"> }
+  // Directive { "@"identifier }
+  idDirective { "@ID" }
+  // LoadAndGoDirective2 { @specialize<Directive, "LOAD_AND_GO"> }
   LoadAndGoDirective { "@LOAD_AND_GO"}
   immediateDirective { "@IMMEDIATE" }
   hardwareDirective { "@HARDWARE" }
   localsDirective { "@LOCAL" }
   parameterDirective { "@PARAMETER" }
-  MetadataDirective { "@METADATA" }
-  ModelDirective { "@MODEL" }
-  // Directive { "@" identifier }
+  metadataDirective { "@METADATA" }
+  modelDirective { "@MODEL" }
 
   @precedence {
     idDirective,
-    MetadataDirective,
-    ModelDirective,
+    metadataDirective,
+    modelDirective,
     immediateDirective,
     hardwareDirective,
     localsDirective,
     parameterDirective,
     LoadAndGoDirective
-    // Directive
   }
 }
