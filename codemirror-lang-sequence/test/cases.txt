@@ -9,6 +9,20 @@ Sequence(
   )
 )
 
+# Hardware commands
+
+@HARDWARE
+HARDWARE_COMMAND_1
+HDW_2
+
+==>
+Sequence(
+  HardwareCommands(
+    Command(Stem,Args),
+    Command(Stem,Args)
+  )
+)
+
 # Command with two string args
 
 FSW_CMD "hello" "world"
@@ -87,16 +101,24 @@ Sequence(Commands(
 
 # Locals and commands
 
+# comment before parameter
+@PARAMETER L02INT
 # declare my local variables, types are defined in adaptation
+# comment before directive
 @LOCAL L01STRING L02INT
+# early comment
 FSW_CMD 1 2
 FSW_CMD2
 ==>
 
 Sequence(
   LineComment,
+  ParameterDeclaration(Enum),
+  LineComment,
+  LineComment,
   LocalDeclaration(Enum,Enum),
   Commands(
+    LineComment,
     Command(Stem,Args(Number,Number)),
     Command(Stem,Args)
   )
@@ -199,6 +221,7 @@ Sequence(
 @METADATA "bar" "val bar2"
 @MODEL "a" "b" "c"
 @MODEL  "d" "e" "f"
+
 ==>
 
 Sequence(

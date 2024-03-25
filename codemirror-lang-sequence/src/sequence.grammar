@@ -1,6 +1,9 @@
 @top Sequence {
+  commentLine* ~maybeComments
   IdDeclaration?
+  commentLine* ~maybeComments
   ParameterDeclaration?
+  commentLine* ~maybeComments
   LocalDeclaration?
   Metadata*
   Commands?
@@ -8,13 +11,16 @@
   HardwareCommands?
 }
 
-@precedence { stemStart @cut,
+// Potential Improvements
+// allow indentation of directives
+
+@precedence {
+  stemStart @cut,
   p1,
   p2
 }
 
 IdDeclaration {
-  // comment doesn't break most languages
   idDirective whiteSpace String whiteSpace? newLine
 }
 
@@ -29,8 +35,12 @@ LocalDeclaration {
 commandBlock {
   (
     Command
-    | whiteSpace? LineComment newLine
+    | commentLine ~maybeComments
   )+
+}
+
+commentLine {
+  whiteSpace? LineComment newLine
 }
 
 Commands {
