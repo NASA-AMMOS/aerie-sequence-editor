@@ -9,10 +9,12 @@
 }
 
 @precedence { stemStart @cut,
-  p1 @right, p2 @right, p3 @left
+  p1,
+  p2
 }
 
 IdDeclaration {
+  // comment doesn't break most languages
   idDirective whiteSpace String whiteSpace? newLine
 }
 
@@ -49,7 +51,7 @@ HardwareCommands {
 TimeTag { TimeAbsolute | TimeEpoch | TimeRelative  | TimeComplete }
 
 Args {
-  (whiteSpace (~ambig arg | RepeatArgs))* whiteSpace? ~ambig
+  (whiteSpace (arg | RepeatArgs))* whiteSpace?
 }
 
 RepeatArgs {
@@ -64,18 +66,19 @@ arg { Number | String | Enum }
 
 Command {
   whiteSpace?
-  TimeTag? !p2
+  TimeTag?
   Stem
   Args
   LineComment?
   newLine
+  !p2
   Metadata*
   Model*
 }
 
 Metadata {
   // whiteSpace?
-  metadataDirective !p1
+  metadataDirective
   whiteSpace String
   whiteSpace String
   whiteSpace? newLine
@@ -83,7 +86,7 @@ Metadata {
 
 Model {
   // whiteSpace?
-  modelDirective !p1
+  modelDirective
   whiteSpace String
   whiteSpace String
   whiteSpace String
@@ -124,7 +127,7 @@ Stem { !stemStart identifier }
 
   LineComment { "#"![\n\r]* }
 
-  newLine { "\n" | @eof }
+  newLine { "\n" }
 
   whiteSpace { $[ \t]+ }
 

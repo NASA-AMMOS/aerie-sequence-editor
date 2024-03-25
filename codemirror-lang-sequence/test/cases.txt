@@ -29,7 +29,7 @@ Sequence(Commands(
 
 # Command with mixed args and comment
 
-FSW_CMD "hello" 10   # yay comment
+FSW_CMD "hello" 10# yay comment
 ==>
 Sequence(Commands(
   Command(Stem,Args(String,Number),LineComment)
@@ -55,10 +55,12 @@ Sequence(Commands(
 
 # Command with two sting args
 
+# full line comment
 FSW_CMD "TRUE" "FALSE" # end of line
 # full line comment
 ==>
 Sequence(Commands(
+  LineComment,
   Command(Stem,Args(String,String),LineComment),
   LineComment
 ))
@@ -72,23 +74,27 @@ Sequence(Commands(Command(Stem,Args(Enum,Enum))))
 
 # Command with enum args (disallowed in linter) and comments
 
+# Com
 FSW_CMD TRUE FALSE # Com 1
 # Com
 ==>
 
 Sequence(Commands(
+  LineComment,
   Command(Stem,Args(Enum,Enum),LineComment),
   LineComment
 ))
 
 # Locals and commands
 
+# declare my local variables, types are defined in adaptation
 @LOCAL L01STRING L02INT
 FSW_CMD 1 2
 FSW_CMD2
 ==>
 
 Sequence(
+  LineComment,
   LocalDeclaration(Enum,Enum),
   Commands(
     Command(Stem,Args(Number,Number)),
@@ -118,8 +124,8 @@ Sequence(
 
 @PARAMETER L01STRING L02INT
 @LOCAL L01STRING L02INT
-     FSW_CMD 1 2
-     FSW_CMD2 "string val"
+      FSW_CMD 1 2
+      FSW_CMD2 "string val"
 ==>
 
 Sequence(
@@ -130,6 +136,15 @@ Sequence(
     Command(Stem,Args(String))
   )
 )
+
+# Bad Input - Invalid stems
+
+C 2_STEM_NAME
+STEM$BAR
+
+==>
+
+Sequence(Commands(Command(TimeTag(TimeComplete),⚠(Number),Stem,Args),Command(Stem,⚠),Command(Stem,Args,⚠)))
 
 # Commands with models and metadata
 
@@ -168,30 +183,22 @@ Sequence(
   )
 )
 
-# Bad Input - Invalid stems
-
-C 2_STEM_NAME
-STEM$BAR
-
-==>
-
-Sequence(Commands(Command(TimeTag(TimeComplete),⚠(Number),Stem,Args),Command(Stem,⚠),Command(Stem,Args,⚠)))
-
 # Commands with models and metadata, with mixed indentation
 
 @ID "big test"
 
-    @METADATA "foo" "val foo"
+@METADATA "foo" "val foo"
 
 
-CMD_1 1 2 3
-  @METADATA "foo" "val\" foo2"
- @METADATA "bar" "val bar"
+    CMD_1 1 2 3
+@METADATA "foo" "val\" foo2"
+@METADATA "bar" "val bar"
 
-         CMD_2 "hello, it's me"
+
+        CMD_2 "hello, it's me"
 @METADATA "bar" "val bar2"
- @MODEL "a" "b" "c"
-  @MODEL "d" "e" "f"
+@MODEL "a" "b" "c"
+@MODEL  "d" "e" "f"
 ==>
 
 Sequence(
