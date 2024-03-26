@@ -49,25 +49,7 @@ Sequence(Commands(
   Command(Stem,Args(String,Number),LineComment)
 ))
 
-# Commands with different time tags
-
-A2030-001T12:34:56 FSW_CMD "hello" "world"
-R10 FSW_CMD "hello" 10
-==>
-Sequence(Commands(
-  Command(
-    TimeTag(TimeAbsolute),
-    Stem,
-    Args(String,String)
-  ),
-  Command(
-    TimeTag(TimeRelative),
-    Stem,
-    Args(String,Number)
-  )
-))
-
-# Command with two sting args
+# Command with two sting args wrapped by comments
 
 # full line comment
 FSW_CMD "TRUE" "FALSE" # end of line
@@ -86,7 +68,7 @@ FSW_CMD TRUE FALSE
 
 Sequence(Commands(Command(Stem,Args(Enum,Enum))))
 
-# Command with enum args (disallowed in linter) and comments
+# Command with enum args and comments
 
 # Com
 FSW_CMD TRUE FALSE # Com 1

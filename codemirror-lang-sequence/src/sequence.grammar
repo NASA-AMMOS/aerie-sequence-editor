@@ -111,17 +111,17 @@ Stem { !stemStart identifier }
 @tokens {
   identifier { @asciiLetter (@asciiLetter| @digit | "_" | "-")* }
 
-  timeHhmmss { @digit@digit":"@digit@digit":"@digit@digit }
+  timeHhmmss { @digit@digit":"@digit@digit":"@digit@digit("."@digit+)? }
 
   timeDOY { @digit@digit@digit"T"timeHhmmss }
 
-  timeSecond { $[1-9] @digit* }
+  timeSecond { $[1-9] @digit* ("."@digit+)? }
 
   TimeAbsolute { 'A'@digit@digit@digit@digit"-"@digit@digit@digit"T"timeHhmmss whiteSpace }
 
   TimeRelative { 'R'(timeSecond | timeDOY | timeHhmmss) whiteSpace}
 
-  TimeEpoch { 'E'$[+\-]?(timeSecond | timeDOY) whiteSpace}
+  TimeEpoch { 'E'$[+\-]?(timeSecond | timeDOY | timeHhmmss) whiteSpace}
 
   TimeComplete { 'C' whiteSpace }
 
