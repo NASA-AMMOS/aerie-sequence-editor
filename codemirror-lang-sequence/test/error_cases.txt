@@ -1,0 +1,23 @@
+# Stem with disallowed characters
+
+FSW_CMD%BAR$BAZ
+
+==>
+Sequence(
+  Commands(
+    Command(Stem,⚠),
+    Command(Stem,⚠),
+    Command(Stem,Args,⚠)
+  )
+)
+
+# Stem ending in disallowed character
+
+FSW_CMD%
+
+==>
+Sequence(
+  Commands(
+    Command(Stem,Args,⚠)
+  )
+)

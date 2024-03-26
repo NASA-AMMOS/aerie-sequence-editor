@@ -19,8 +19,9 @@ for (const file of readdirSync(caseDir)) {
   });
 }
 
-// lezer's fileTests strips whitespace off test strings
-function fileTests(file, fileName, mayIgnore) {
+// modified version of function in @lezer/generator/dist/test
+// lezer's fileTests strips whitespace off test strings which is bad for a whitespace delimited grammar
+function fileTests(file, fileName, mayIgnore, run) {
   var caseExpr = /\s*#[ \t]*(.*)(?:\r\n|\r|\n)([^]*?)==+>([^]*?)(?:$|(?:\r\n|\r|\n)+(?=#))/gy;
   var tests = [];
   var lastIndex = 0;

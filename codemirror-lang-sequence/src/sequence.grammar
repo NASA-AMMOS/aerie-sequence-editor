@@ -13,10 +13,9 @@
 }
 
 // Potential Improvements
-// allow indentation of directives
-
-// Directive { "@"identifier }
-// LoadAndGoDirective2 { @specialize<Directive, "LOAD_AND_GO"> }
+// flexibility - allow indentation of directives
+// maintainability - use @specialize on directives
+// extensibility - add generic Directive { "@"identifier }
 
 @precedence {
   stemStart @cut
@@ -35,10 +34,7 @@ LocalDeclaration {
 }
 
 commandBlock {
-  (
-    Command
-    | commentLine ~maybeComments
-  )+
+  (Command | commentLine ~maybeComments)+
 }
 
 commentLine {
@@ -87,25 +83,25 @@ Command {
   Models?
 }
 
-Metadata { MetaEntry+ }
-
-MetaEntry {
-  // whiteSpace?
-  metadataDirective
-  whiteSpace Key { String }
-  whiteSpace Value { String }
-  whiteSpace? newLine
+Metadata {
+  MetaEntry {
+    // whiteSpace?
+    metadataDirective
+    whiteSpace Key { String }
+    whiteSpace Value { String }
+    whiteSpace? newLine
+  }+
 }
 
-Models { Model+ }
-
-Model {
-  // whiteSpace?
-  modelDirective
-  whiteSpace Variable { String }
-  whiteSpace Value { String | Number | Boolean }
-  whiteSpace Offset { String }
-  whiteSpace? newLine
+Models {
+  Model {
+    // whiteSpace?
+    modelDirective
+    whiteSpace Variable { String }
+    whiteSpace Value { String | Number | Boolean }
+    whiteSpace Offset { String }
+    whiteSpace? newLine
+  }+
 }
 
 Enum { identifier }
@@ -142,7 +138,6 @@ Stem { !stemStart identifier }
 
   TRUE { "TRUE" }
   FALSE { "FALSE" }
-
   Boolean { TRUE | FALSE }
 
   LineComment { "#"![\n\r]* }
