@@ -148,8 +148,8 @@ Stem { !stemStart identifier }
   LoadAndGoDirective { "@LOAD_AND_GO"}
   immediateDirective { "@IMMEDIATE" }
   hardwareDirective { "@HARDWARE" }
-  localsDirective { "@LOCAL" }
-  parameterDirective { "@PARAMETER" }
+  localsDirective { "@LOCALS" }
+  parameterDirective { "@INPUT_PARAMS" }
   metadataDirective { "@METADATA" }
   modelDirective { "@MODEL" }
 
