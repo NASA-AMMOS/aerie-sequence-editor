@@ -5,9 +5,15 @@
 # Welcome
 
 
-     # Bingo
+        @PARAMETER PARM1
 
-@LOCAL FOO    BAR
+
+    # Bingo
+
+  @LOCAL FOO    BAR     BIZ
+
+
+
 
 
 

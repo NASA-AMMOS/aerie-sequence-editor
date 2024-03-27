@@ -241,3 +241,58 @@ Sequence(
     )
   )
 )
+
+# Mega Sequence
+
+     @ID "big test"
+
+# Welcome
+
+
+        @PARAMETER PARM1
+
+
+    # Bingo
+
+  @LOCAL FOO    BAR     BIZ
+
+
+
+
+
+
+
+@METADATA "foo" "val foo"
+
+
+
+@LOAD_AND_GO
+
+    # indented 4 spaces
+    CMD_1 1 2 3
+    @METADATA "foo" "val\" foo2"
+    @METADATA "bar" "val bar"
+
+
+        # indented 8 spaces
+        CMD_2 "hello, it's me"
+        @MODEL "a" "b" "c"
+        @MODEL  "d" "e" "f"
+
+==>
+
+Sequence(
+  IdDeclaration(String),
+  LineComment,
+  ParameterDeclaration(Enum),
+  LineComment,
+  LocalDeclaration(Enum,Enum,Enum),
+  Metadata(MetaEntry(Key(String),Value(String))),
+  Commands(
+    LoadAndGoDirective,
+    LineComment,
+    Command(Stem,Args(Number,Number,Number),Metadata(MetaEntry(Key(String),Value(String)),MetaEntry(Key(String),Value(String)))),
+    LineComment,
+    Command(Stem,Args(String),Models(Model(Variable(String),Value(String),Offset(String)),Model(Variable(String),Value(String),Offset(String))))
+  )
+)

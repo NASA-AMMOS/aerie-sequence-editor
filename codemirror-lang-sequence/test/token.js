@@ -44,13 +44,56 @@ describe('seqfiles', () => {
     const name = /^[^.]*/.exec(file)[0];
     it(name, () => {
       const input = readFileSync(path.join(seqDir, file), 'utf8');
-      // printTokens(input, (ttype) => ttype === ERROR);
-      assertNoErrorTokens(input);
+      // printNodes(input, (ttype) => ttype === ERROR);
+      assertNoErrorNodes(input);
     });
   }
 });
 
-function assertNoErrorTokens(input) {
+describe('token positions', () => {
+  it('comment indentation', () => {
+    const input = `#COMMENT01
+# COMMENT2
+
+CMD1
+
+
+    CMD2   ARG3       "ARG4" 5
+
+
+  # COMMENT3
+`;
+    const expectedCommentLocations = {
+      LineComment: [
+        { from: 0, to: 10 },
+        { from: 11, to: 21 },
+        { from: 65, to: 75 },
+      ],
+      Stem: [
+        { from: 23, to: 27 },
+        { from: 34, to: 38 },
+      ],
+    };
+    const actualCommentLocations = {};
+    assertNoErrorNodes(input);
+    const parsed = SeqLanguage.parser.parse(input);
+    const cursor = parsed.cursor();
+    do {
+      const { node } = cursor;
+      // printNode(input, node);
+      if (['LineComment', 'Stem'].includes(node.type.name)) {
+        const { to, from } = node;
+        if (actualCommentLocations[node.type.name] === undefined) {
+          actualCommentLocations[node.type.name] = [];
+        }
+        actualCommentLocations[node.type.name].push({ from, to });
+      }
+    } while (cursor.next());
+    assert.deepStrictEqual(expectedCommentLocations, actualCommentLocations);
+  });
+});
+
+function assertNoErrorNodes(input) {
   const parsed = SeqLanguage.parser.parse(input);
   const cursor = parsed.cursor();
   do {
@@ -60,13 +103,18 @@ function assertNoErrorTokens(input) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function printTokens(input, filter) {
+function printNode(input, node) {
+  console.log(`${node.type.name}[${node.from}.${node.to}] --> '${input.substring(node.from, node.to)}'`);
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function printNodes(input, filter) {
   const parsed = SeqLanguage.parser.parse(input);
   const cursor = parsed.cursor();
   do {
     const { node } = cursor;
     if (!filter || filter(node.type.name)) {
-      console.log(`${node.type.name} --> '${input.substring(node.from, node.to)}'`);
+      printNode(input, node);
     }
   } while (cursor.next());
 }
