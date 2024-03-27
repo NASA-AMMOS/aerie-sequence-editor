@@ -27,13 +27,74 @@ export function sequenceCompletion(commandDictionary: CommandDictionary | null =
       const enumerationCompletions: Completion[] = [];
       const fswCommandsCompletions: Completion[] = [];
       const hwCommandsCompletions: Completion[] = [];
+      const directivesCompletions: Completion[] = [];
+
+      // Directives.
+      directivesCompletions.push(
+        {
+          apply: `METADATA "Key" "Value"`,
+          info: 'Any key-value pairs',
+          label: `@METADATA`,
+          section: 'Directives',
+          type: 'keyword',
+        },
+        {
+          apply: `LOAD_AND_GO`,
+          info: 'Set Sequence as a Load and Go Sequence',
+          label: '@LOAD_AND_GO',
+          section: 'Directives',
+          type: 'keyword',
+        },
+        {
+          apply: `INPUT_PARAMS VALUE`,
+          info: 'List of Input Parameters',
+          label: '@INPUT_PARAMS',
+          section: 'Directives',
+          type: 'keyword',
+        },
+        {
+          apply: `LOCALS VALUE`,
+          info: 'List of Local Variables',
+          label: '@LOCALS',
+          section: 'Directives',
+          type: 'keyword',
+        },
+        {
+          apply: `MODEL "Variable" 0 "Offset"`,
+          info: 'List of Local Variables',
+          label: '@MODEL',
+          section: 'Directives',
+          type: 'keyword',
+        },
+        {
+          apply: `HARDWARE`,
+          info: 'A HARDWARE Directive',
+          label: '@HARDWARE',
+          section: 'Directives',
+          type: 'keyword',
+        },
+        {
+          apply: `IMMEDIATE`,
+          info: 'A IMMEDIATE Directive',
+          label: '@IMMEDIATE',
+          section: 'Directives',
+          type: 'keyword',
+        },
+        {
+          apply: `ID`,
+          info: 'Sequence ID',
+          label: '@ID',
+          section: 'Directives',
+          type: 'keyword',
+        },
+      );
 
       // Time Tags.
       timeTagCompletions.push(
         {
-          apply: 'abs(2024-001T00:00:00)',
+          apply: 'A000-000T00:00:00)',
           info: 'Execute command at an absolute time',
-          label: `abs (absolute)`,
+          label: `A (absolute)`,
           section: 'Time Tags',
           type: 'keyword',
         },
@@ -106,19 +167,12 @@ export function sequenceCompletion(commandDictionary: CommandDictionary | null =
             type: 'function',
           });
         }
-
-        fswCommandsCompletions.push({
-          apply: 'groundBlock("name")',
-          info: 'A ground block',
-          label: 'groundBlock',
-          section: 'Steps',
-          type: 'function',
-        });
       }
 
       return {
         from: word.from,
         options: [
+          ...directivesCompletions,
           ...timeTagCompletions,
           ...enumerationCompletions,
           ...fswCommandsCompletions,
