@@ -37,7 +37,7 @@ export function fswCommandArgDefault(fswCommandArg: FswCommandArgument, enumMap:
       // If the enum symbol has whitespace, return it in quotes so it does not mess everything up.
       return `"${enumSymbolValue}"`;
     } else {
-      return enumSymbolValue ?? 'UNKNOWN_ENUM';
+      return `"${enumSymbolValue}"` ?? 'UNKNOWN_ENUM';
     }
   } else if (arg_type === 'fill') {
     return '""';
@@ -98,7 +98,7 @@ export function fswCommandArgDefault(fswCommandArg: FswCommandArgument, enumMap:
           repeatedArg += `${argValue}`;
 
           if (i !== repeat.arguments.length - 1) {
-            repeatedArg += ', ';
+            repeatedArg += ' ';
           }
         }
 
@@ -108,7 +108,7 @@ export function fswCommandArgDefault(fswCommandArg: FswCommandArgument, enumMap:
 
         // If we are going to add another repeated arg, make sure to add a comma.
         if (min !== null && totalRepeatedArgs < min) {
-          defaultRepeatArg += ', ';
+          defaultRepeatArg += ' ';
         }
       } while (min !== null && totalRepeatedArgs < min);
     }
