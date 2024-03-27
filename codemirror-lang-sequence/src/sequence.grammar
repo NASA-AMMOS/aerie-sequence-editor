@@ -1,4 +1,5 @@
 @top Sequence {
+  (newLine | whiteSpace)?
   commentLine* ~maybeComments
   IdDeclaration?
   commentLine* ~maybeComments
@@ -22,15 +23,15 @@
 }
 
 IdDeclaration {
-  idDirective whiteSpace String whiteSpace? newLine
+  idDirective whiteSpace String newLine
 }
 
 ParameterDeclaration {
-  parameterDirective (whiteSpace Enum)+ whiteSpace? newLine
+  parameterDirective (whiteSpace Enum)+ newLine
 }
 
 LocalDeclaration {
-  localsDirective (whiteSpace Enum)+ whiteSpace? newLine
+  localsDirective (whiteSpace Enum)+ newLine
 }
 
 commandBlock {
@@ -38,21 +39,21 @@ commandBlock {
 }
 
 commentLine {
-  whiteSpace? LineComment newLine
+  LineComment newLine
 }
 
 Commands {
-  (LoadAndGoDirective whiteSpace? newLine)?
+  (LoadAndGoDirective newLine)?
   commandBlock
 }
 
 ImmediateCommands {
-  immediateDirective whiteSpace? newLine
+  immediateDirective newLine
   commandBlock
 }
 
 HardwareCommands {
-  hardwareDirective whiteSpace? newLine
+  hardwareDirective newLine
   commandBlock
 }
 
@@ -63,17 +64,16 @@ Args {
 }
 
 RepeatArgs {
-  "[" whiteSpace? (RepeatArg whiteSpace?)* "]"
+  "[" (whiteSpace? RepeatArg)* whiteSpace? "]"
 }
 
 RepeatArg {
-  "[" whiteSpace? (arg whiteSpace?)* "]"
+  "[" (whiteSpace? arg)* whiteSpace? "]"
 }
 
 arg { Number | String | Enum }
 
 Command {
-  whiteSpace?
   TimeTag?
   Stem
   Args
@@ -85,22 +85,20 @@ Command {
 
 Metadata {
   MetaEntry {
-    // whiteSpace?
     metadataDirective
     whiteSpace Key { String }
     whiteSpace Value { String }
-    whiteSpace? newLine
+    newLine
   }+
 }
 
 Models {
   Model {
-    // whiteSpace?
     modelDirective
     whiteSpace Variable { String }
     whiteSpace Value { String | Number | Boolean }
     whiteSpace Offset { String }
-    whiteSpace? newLine
+    newLine
   }+
 }
 
@@ -142,7 +140,7 @@ Stem { !stemStart identifier }
 
   LineComment { "#"![\n\r]* }
 
-  newLine { "\n" }
+  newLine { ($[ \t]* "\n")+ $[ \t]* }
 
   whiteSpace { $[ \t]+ }
 
@@ -155,6 +153,10 @@ Stem { !stemStart identifier }
   metadataDirective { "@METADATA" }
   modelDirective { "@MODEL" }
 
+  @precedence {
+    newLine, whiteSpace
+  }
+
   @precedence{ TimeAbsolute, TimeRelative, TimeEpoch, TimeComplete, identifier }
 
   @precedence {
@@ -165,6 +167,7 @@ Stem { !stemStart identifier }
     hardwareDirective,
     localsDirective,
     parameterDirective,
-    LoadAndGoDirective
+    LoadAndGoDirective,
+    identifier
   }
 }

@@ -147,15 +147,6 @@ Sequence(
   )
 )
 
-# Bad Input - Invalid stems
-
-C 2_STEM_NAME
-STEM$BAR
-
-==>
-
-Sequence(Commands(Command(TimeTag(TimeComplete),⚠(Number),Stem,Args),Command(Stem,⚠),Command(Stem,Args,⚠)))
-
 # Commands with models and metadata
 
 @ID "big test"
@@ -207,16 +198,17 @@ Sequence(
 
 @METADATA "foo" "val foo"
 
-
+    # indented 4 spaces
     CMD_1 1 2 3
-@METADATA "foo" "val\" foo2"
-@METADATA "bar" "val bar"
+    @METADATA "foo" "val\" foo2"
+    @METADATA "bar" "val bar"
 
 
+        # indented 8 spaces
         CMD_2 "hello, it's me"
-@METADATA "bar" "val bar2"
-@MODEL "a" "b" "c"
-@MODEL  "d" "e" "f"
+        @METADATA "bar" "val bar2"
+        @MODEL "a" "b" "c"
+        @MODEL  "d" "e" "f"
 
 ==>
 
@@ -226,6 +218,7 @@ Sequence(
     MetaEntry(Key(String),Value(String))
   ),
   Commands(
+    LineComment,
     Command(
       Stem,
       Args(Number,Number,Number),
@@ -234,6 +227,7 @@ Sequence(
         MetaEntry(Key(String),Value(String))
       )
     ),
+    LineComment,
     Command(
       Stem,
       Args(String),

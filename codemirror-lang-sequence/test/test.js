@@ -6,7 +6,7 @@ import { readFileSync, readdirSync } from 'fs';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
 
-const caseDir = path.dirname(fileURLToPath(import.meta.url));
+const caseDir = path.dirname(fileURLToPath(import.meta.url)) + '/cases';
 
 for (const file of readdirSync(caseDir)) {
   if (!/\.txt$/.test(file)) continue;

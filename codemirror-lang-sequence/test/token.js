@@ -2,6 +2,11 @@
 
 import { SeqLanguage } from '../dist/index.js';
 import assert from 'assert';
+import { readFileSync, readdirSync } from 'fs';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
+
+const ERROR = '⚠';
 
 describe('error positions', () => {
   for (const { testname, input, first_error } of [
@@ -22,7 +27,7 @@ COM "dsa"
       const cursor = parsed.cursor();
       do {
         const { node } = cursor;
-        if (node.type.name === '⚠') {
+        if (node.type.name === ERROR) {
           assert.strictEqual(cursor.from, first_error);
           break;
         }
@@ -30,3 +35,38 @@ COM "dsa"
     });
   }
 });
+
+describe('seqfiles', () => {
+  const seqDir = path.dirname(fileURLToPath(import.meta.url)) + '/sequences';
+  for (const file of readdirSync(seqDir)) {
+    if (!/\.txt$/.test(file)) continue;
+
+    const name = /^[^.]*/.exec(file)[0];
+    it(name, () => {
+      const input = readFileSync(path.join(seqDir, file), 'utf8');
+      // printTokens(input, (ttype) => ttype === ERROR);
+      assertNoErrorTokens(input);
+    });
+  }
+});
+
+function assertNoErrorTokens(input) {
+  const parsed = SeqLanguage.parser.parse(input);
+  const cursor = parsed.cursor();
+  do {
+    const { node } = cursor;
+    assert.notStrictEqual(node.type.name, ERROR);
+  } while (cursor.next());
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function printTokens(input, filter) {
+  const parsed = SeqLanguage.parser.parse(input);
+  const cursor = parsed.cursor();
+  do {
+    const { node } = cursor;
+    if (!filter || filter(node.type.name)) {
+      console.log(`${node.type.name} --> '${input.substring(node.from, node.to)}'`);
+    }
+  } while (cursor.next());
+}
