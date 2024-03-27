@@ -1,96 +1,125 @@
 @top Sequence {
-  (whiteSpace | newLine )* // support empty white space at the beginning of the file before user is typing
+  (newLine | whiteSpace)?
+  commentLine* ~maybeComments
+  IdDeclaration?
+  commentLine* ~maybeComments
+  ParameterDeclaration?
+  commentLine* ~maybeComments
+  LocalDeclaration?
+  commentLine* ~maybeComments
   Metadata?
-  LoadNGO?
-  Parameters?
-  Locals?
-  expression
+  Commands?
+  ImmediateCommands?
+  HardwareCommands?
 }
 
-expression[@isGroup=Expression] {
-    Commands | ImmediateCommands | HardwareCommands
+// Potential Improvements
+// flexibility - allow indentation of directives
+// maintainability - use @specialize on directives
+// extensibility - add generic Directive { "@"identifier }
+
+@precedence {
+  stemStart @cut
 }
 
-//
-// Sections
-//
+IdDeclaration {
+  idDirective whiteSpace String newLine
+}
+
+ParameterDeclaration {
+  parameterDirective (whiteSpace Enum)+ newLine
+}
+
+LocalDeclaration {
+  localsDirective (whiteSpace Enum)+ newLine
+}
+
+commandBlock {
+  (Command | commentLine ~maybeComments)+
+}
+
+commentLine {
+  LineComment newLine
+}
 
 Commands {
-  ((LineComment newLine?) | (!TimeTag(Command)) )+
+  (LoadAndGoDirective newLine)?
+  commandBlock
 }
 
 ImmediateCommands {
-  "@IMMEDIATE_COMMANDS"( whiteSpace | newLine )? (!TimeTag( Command ))+
+  immediateDirective newLine
+  commandBlock
 }
 
 HardwareCommands {
-  "@HARDWARE_COMMANDS"( whiteSpace | newLine )? (!TimeTag( Command ))+
-}
-
-Parameters {
-  '@INPUT_PARAMS' (whiteSpace+ Parameter newLine?)+ (whiteSpace newLine)?
-}
-Parameter { identifier }
-
-Locals { '@LOCALS' (whiteSpace+ Local newLine?)+ (whiteSpace newLine)? }
-Local { identifier }
-
-LoadNGO { '@LOAD_AND_GO'( whiteSpace | newLine )* }
-
-Command {
-  TimeTag? Stem whiteSpace? Args? Description? (newLine? | newLine whiteSpace* ) (
-    (Models? Metadata?) | ( Metadata? Models?)
-  )?
+  hardwareDirective newLine
+  commandBlock
 }
 
 TimeTag { TimeAbsolute | TimeEpoch | TimeRelative  | TimeComplete }
-Stem { identifier }
+
 Args {
-  (arg whiteSpace? | RepeatArgs whiteSpace?)+
+  (whiteSpace (arg | RepeatArgs))* whiteSpace?
 }
+
 RepeatArgs {
-  "[" whiteSpace? (RepeatArg whiteSpace?)* "]"
+  "[" (whiteSpace? RepeatArg)* whiteSpace? "]"
 }
+
 RepeatArg {
-  "[" whiteSpace? (arg whiteSpace?)* "]"
+  "[" (whiteSpace? arg)* whiteSpace? "]"
 }
-arg { Number | String }
 
-//Description { lineComment }
-//Comment { fullLineComment}
-//Comments { Comment+ }
+arg { Number | String | Enum }
 
-
-Models { Model+ }
-Model {
-  '@MODEL' whiteSpace Variable whiteSpace Value whiteSpace Offset (whiteSpace | newLine )*
+Command {
+  TimeTag?
+  Stem
+  Args
+  LineComment?
+  newLine
+  Metadata?
+  Models?
 }
-Variable { String }
-Offset { String }
-Value { String | Number | Boolean }
 
-Metadata { MetaEntry+ }
-MetaEntry {
-  '@METADATA' whiteSpace MetaKey whiteSpace MetaValue (whiteSpace | newLine )*
+Metadata {
+  MetaEntry {
+    metadataDirective
+    whiteSpace Key { String }
+    whiteSpace Value { String }
+    newLine
+  }+
 }
-MetaKey { String }
-MetaValue { String }
 
+Models {
+  Model {
+    modelDirective
+    whiteSpace Variable { String }
+    whiteSpace Value { String | Number | Boolean }
+    whiteSpace Offset { String }
+    newLine
+  }+
+}
+
+Enum { identifier }
+
+Stem { !stemStart identifier }
 
 @tokens {
   identifier { @asciiLetter (@asciiLetter| @digit | "_" | "-")* }
 
-  timeHhmmss { @digit@digit":"@digit@digit":"@digit@digit }
+  timeHhmmss { @digit@digit":"@digit@digit":"@digit@digit("."@digit+)? }
 
   timeDOY { @digit@digit@digit"T"timeHhmmss }
 
-  timeSecond { $[1-9] @digit* }
+  timeSecond { $[1-9] @digit* ("."@digit+)? }
 
   TimeAbsolute { 'A'@digit@digit@digit@digit"-"@digit@digit@digit"T"timeHhmmss whiteSpace }
 
   TimeRelative { 'R'(timeSecond | timeDOY | timeHhmmss) whiteSpace}
 
-  TimeEpoch { 'E'$[+\-]?(timeSecond | timeDOY) whiteSpace}
+  TimeEpoch { 'E'$[+\-]?(timeSecond | timeDOY | timeHhmmss) whiteSpace}
 
   TimeComplete { 'C' whiteSpace }
 
@@ -107,21 +136,38 @@ MetaValue { String }
 
   TRUE { "TRUE" }
   FALSE { "FALSE" }
-
   Boolean { TRUE | FALSE }
-
-  Description { "//"![\n\r]* }
 
   LineComment { "#"![\n\r]* }
 
-  newLine { "\n"+ | "\r"+ | "\r\n"+ | "\n\r"+ }
+  newLine { ($[ \t]* "\n")+ $[ \t]* |  (whiteSpace? @eof) }
 
   whiteSpace { $[ \t]+ }
 
-  @precedence{ TimeAbsolute, TimeRelative, TimeEpoch, TimeComplete, identifier, LineComment, Description}
+  idDirective { "@ID" }
+  LoadAndGoDirective { "@LOAD_AND_GO"}
+  immediateDirective { "@IMMEDIATE" }
+  hardwareDirective { "@HARDWARE" }
+  localsDirective { "@LOCAL" }
+  parameterDirective { "@PARAMETER" }
+  metadataDirective { "@METADATA" }
+  modelDirective { "@MODEL" }
 
+  @precedence {
+    newLine, whiteSpace
+  }
+
+  @precedence{ TimeAbsolute, TimeRelative, TimeEpoch, TimeComplete, identifier }
+
+  @precedence {
+    idDirective,
+    metadataDirective,
+    modelDirective,
+    immediateDirective,
+    hardwareDirective,
+    localsDirective,
+    parameterDirective,
+    LoadAndGoDirective,
+    identifier
+  }
 }
-
-@precedence {TimeTag }
-
-@detectDelim
