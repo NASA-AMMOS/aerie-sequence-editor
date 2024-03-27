@@ -7,6 +7,10 @@ import * as path from 'path';
 import { fileURLToPath } from 'url';
 
 const ERROR = '⚠';
+const STEM_TOKEN = 'Stem';
+const LINE_COMMENT_TOKEN = 'LineComment';
+const METADATA_TOKEN = 'Metadata';
+const METADATA_ENTRY_TOKEN = 'MetaEntry';
 
 describe('error positions', () => {
   for (const { testname, input, first_error } of [
@@ -23,8 +27,7 @@ COM "dsa"
     },
   ]) {
     it(testname, () => {
-      const parsed = SeqLanguage.parser.parse(input);
-      const cursor = parsed.cursor();
+      const cursor = SeqLanguage.parser.parse(input).cursor();
       do {
         const { node } = cursor;
         if (node.type.name === ERROR) {
@@ -55,33 +58,45 @@ describe('token positions', () => {
     const input = `#COMMENT01
 # COMMENT2
 
-CMD1
+CMD0
 
 
-    CMD2   ARG3       "ARG4" 5
+    COMMAND_01   ARG3       "ARG4" 5
 
 
   # COMMENT3
-`;
+
+
+      COMMAND___002      "str_arg_2_0"    "str_arg_2_1"
+
+@METADATA "md3" "foobar"`;
+    const nodeLocation = (input, nodeText, position) => {
+      const from = input.indexOf(nodeText, position);
+      return {
+        to: from + nodeText.length,
+        from,
+      };
+    };
     const expectedCommentLocations = {
-      LineComment: [
-        { from: 0, to: 10 },
-        { from: 11, to: 21 },
-        { from: 65, to: 75 },
+      [LINE_COMMENT_TOKEN]: [
+        nodeLocation(input, '#COMMENT01'),
+        nodeLocation(input, '# COMMENT2'),
+        nodeLocation(input, '# COMMENT3'),
       ],
-      Stem: [
-        { from: 23, to: 27 },
-        { from: 34, to: 38 },
+      [STEM_TOKEN]: [
+        nodeLocation(input, 'CMD0'),
+        nodeLocation(input, 'COMMAND_01'),
+        nodeLocation(input, 'COMMAND___002'),
       ],
     };
     const actualCommentLocations = {};
     assertNoErrorNodes(input);
-    const parsed = SeqLanguage.parser.parse(input);
-    const cursor = parsed.cursor();
+    const parseTree = SeqLanguage.parser.parse(input);
+    const cursor = parseTree.cursor();
     do {
       const { node } = cursor;
       // printNode(input, node);
-      if (['LineComment', 'Stem'].includes(node.type.name)) {
+      if ([LINE_COMMENT_TOKEN, STEM_TOKEN].includes(node.type.name)) {
         const { to, from } = node;
         if (actualCommentLocations[node.type.name] === undefined) {
           actualCommentLocations[node.type.name] = [];
@@ -90,27 +105,40 @@ CMD1
       }
     } while (cursor.next());
     assert.deepStrictEqual(expectedCommentLocations, actualCommentLocations);
+
+    const cmd2 = parseTree.topNode.getChild('Commands').getChildren('Command')[2];
+    const cmd2args = cmd2.getChild('Args');
+    assert.strictEqual('"str_arg_2_0"', nodeContents(input, cmd2args.getChildren('String')[0]));
+    assert.strictEqual('"str_arg_2_1"', nodeContents(input, cmd2args.getChildren('String')[1]));
+    assert.strictEqual('"str_arg_2_1"', nodeContents(input, cmd2args.firstChild.nextSibling));
+    assert.strictEqual(null, cmd2args.firstChild.nextSibling.nextSibling); // only 2 arguments
+
+    const cmd2meta = cmd2.getChild(METADATA_TOKEN).getChild(METADATA_ENTRY_TOKEN);
+    assert.strictEqual('"md3"', nodeContents(input, cmd2meta.getChild('Key')));
+    assert.strictEqual('"foobar"', nodeContents(input, cmd2meta.getChild('Value')));
   });
 });
 
 function assertNoErrorNodes(input) {
-  const parsed = SeqLanguage.parser.parse(input);
-  const cursor = parsed.cursor();
+  const cursor = SeqLanguage.parser.parse(input).cursor();
   do {
     const { node } = cursor;
     assert.notStrictEqual(node.type.name, ERROR);
   } while (cursor.next());
 }
 
+function nodeContents(input, node) {
+  return input.substring(node.from, node.to);
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function printNode(input, node) {
-  console.log(`${node.type.name}[${node.from}.${node.to}] --> '${input.substring(node.from, node.to)}'`);
+  console.log(`${node.type.name}[${node.from}.${node.to}] --> '${nodeContents(input, node)}'`);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function printNodes(input, filter) {
-  const parsed = SeqLanguage.parser.parse(input);
-  const cursor = parsed.cursor();
+  const cursor = SeqLanguage.parser.parse(input).cursor();
   do {
     const { node } = cursor;
     if (!filter || filter(node.type.name)) {

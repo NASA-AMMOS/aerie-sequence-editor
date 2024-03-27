@@ -140,7 +140,7 @@ Stem { !stemStart identifier }
 
   LineComment { "#"![\n\r]* }
 
-  newLine { ($[ \t]* "\n")+ $[ \t]* }
+  newLine { ($[ \t]* "\n")+ $[ \t]* |  (whiteSpace? @eof) }
 
   whiteSpace { $[ \t]+ }
 
