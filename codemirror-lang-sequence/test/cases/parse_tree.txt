@@ -84,10 +84,10 @@ Sequence(Commands(
 # Locals and commands
 
 # comment before parameter
-@PARAMETER L02INT
+@INPUT_PARAMS L02INT
 # declare my local variables, types are defined in adaptation
 # comment before directive
-@LOCAL L01STRING L02INT
+@LOCALS L01STRING L02INT
 # before metadata comment
 @METADATA "foo" "val foo"
 # before commands comment
@@ -115,8 +115,8 @@ Sequence(
 
 # Parameters, locals, and commands
 
-@PARAMETER L01STRING L02INT
-@LOCAL L01STRING L02INT
+@INPUT_PARAMS L01STRING L02INT
+@LOCALS L01STRING L02INT
 FSW_CMD 1 2
 FSW_CMD2
 ==>
@@ -132,8 +132,8 @@ Sequence(
 
 # Parameters, locals, and indented commands
 
-@PARAMETER L01STRING L02INT
-@LOCAL L01STRING L02INT
+@INPUT_PARAMS L01STRING L02INT
+@LOCALS L01STRING L02INT
       FSW_CMD 1 2
       FSW_CMD2 "string val"
 ==>
@@ -249,12 +249,12 @@ Sequence(
 # Welcome
 
 
-        @PARAMETER PARM1
+        @INPUT_PARAMS PARM1
 
 
     # Bingo
 
-  @LOCAL FOO    BAR     BIZ
+  @LOCALS FOO    BAR     BIZ
 
 
 

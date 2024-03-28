@@ -5,12 +5,12 @@
 # Welcome
 
 
-        @PARAMETER PARM1
+        @INPUT_PARAMS PARM1
 
 
     # Bingo
 
-  @LOCAL FOO    BAR     BIZ
+  @LOCALS FOO    BAR     BIZ
 
 
 
