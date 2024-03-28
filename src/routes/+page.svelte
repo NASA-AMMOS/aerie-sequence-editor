@@ -4,7 +4,8 @@
   import { json } from '@codemirror/lang-json';
   import { syntaxTree } from '@codemirror/language';
   import { lintGutter } from '@codemirror/lint';
-  import { Compartment } from '@codemirror/state';
+  import { Compartment, StateField, Transaction, EditorState } from '@codemirror/state';
+  import type { SyntaxNode } from '@lezer/common';
   import type { ViewUpdate } from '@codemirror/view';
   import type { CommandDictionary } from '@nasa-jpl/aerie-ampcs';
   import { basicSetup, EditorView } from 'codemirror';
@@ -18,6 +19,7 @@
   import { sequenceLinter } from '../utilities/sequence-linter';
   import { sequenceTooltip } from '../utilities/sequence-tooltip';
   import { seqJsonDefault, sequenceToSeqJson } from '../utilities/to-seq-json';
+  import SelectedCommand from '../components/details/selected-command.svelte';
 
   let clientHeightGridRightBottom: number;
   let clientHeightGridRightTop: number;
@@ -30,12 +32,29 @@
   let editorSeqJsonView: EditorView;
   let editorSequenceDiv: HTMLDivElement;
   let editorSequenceView: EditorView;
+  let selectedNode: SyntaxNode | null;
+  let latestEditorState: EditorState | null;
 
   onMount(() => {
     compartmentSeqJsonLinter = new Compartment();
     compartmentSeqLanguage = new Compartment();
     compartmentSeqLinter = new Compartment();
     compartmentSeqTooltip = new Compartment();
+
+    const selectedCommandUpdater = StateField.define({
+      create() { return null; },
+      update(value: SyntaxNode | null, tr: Transaction): SyntaxNode | null {
+        // console.log(value);
+        const sel = tr.state.selection.asSingle().main.from;
+        let node: SyntaxNode | undefined = syntaxTree(tr.state).resolveInner(sel, -1);
+        if (!!node) {
+          latestEditorState = tr.state;
+          selectedNode = node;
+        }
+
+        return node;
+      }
+    })
 
     editorSequenceView = new EditorView({
       doc: '',
@@ -48,6 +67,7 @@
         compartmentSeqLinter.of(sequenceLinter()),
         compartmentSeqTooltip.of(sequenceTooltip()),
         EditorView.updateListener.of(debounce(sequenceUpdateListener, 250)),
+        selectedCommandUpdater
       ],
       parent: editorSequenceDiv,
     });
@@ -119,31 +139,39 @@
       />
     </div>
   </div>
-  <div class="grid-right">
-    <div class="grid-right-top" bind:clientHeight={clientHeightGridRightTop}>
+  <div class="grid-center">
+    <div class="grid-center-top" bind:clientHeight={clientHeightGridRightTop}>
       <div bind:this={editorSequenceDiv} />
     </div>
-    <div class="grid-right-bottom" bind:clientHeight={clientHeightGridRightBottom}>
+    <div class="grid-center-bottom" bind:clientHeight={clientHeightGridRightBottom}>
       <div bind:this={editorSeqJsonDiv} />
     </div>
+  </div>
+  <div class="grid-right">
+    <SelectedCommand
+      node={selectedNode}
+      {commandDictionary}
+      {editorSequenceView}
+    />
   </div>
 </div>
 
 <style>
   .grid {
     display: grid;
-    grid-template-columns: 1fr 4fr;
+    grid-template-columns: 1fr 4fr 2fr;
     height: 100%;
   }
 
   .grid-left,
+  .grid-center,
   .grid-right,
-  .grid-right-bottom,
-  .grid-right-top {
+  .grid-center-bottom,
+  .grid-center-top {
     overflow: scroll;
   }
 
-  .grid-right {
+  .grid-center {
     display: grid;
     grid-template-rows: 1fr 1fr;
   }
